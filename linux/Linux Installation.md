@@ -57,3 +57,6 @@ sudo systemctl start /dev/zram0
 #icon theme oomox-Airmail-Dark
 gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+
+#online accounts
+budgie-control-center seahorse
