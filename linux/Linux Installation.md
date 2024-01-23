@@ -105,8 +105,14 @@ sway swaylock swayidle sway-systemd
 ```
 
 #### i3
-```
-i3-wm i3-exit i3lock polybar
+```bash
+sudo pacman -S i3-wm i3-exit i3lock polybar
+
+# https://github.com/endeavouros-team/endeavouros-i3wm-setup
+wget https://raw.githubusercontent.com/endeavouros-team/endeavouros-i3wm-setup/main/i3_install
+chmod +x i3_install
+./i3_install
+# change keyboard shortcuts, predefined workspaces
 ```
 
 #### Hyprland
