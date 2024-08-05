@@ -1,0 +1,14 @@
+GIMP Palette
+Name: Xournal New Palette.gpl
+#
+  0   0   0 Black       #000000
+ 58 145   4 Green       #3A9104
+100 186 255 Light Blue  #64BAFF
+155 219  77 Light Green #9BDB4D
+  0  46 153 Blue        #002E99
+128 128 128 Gray        #808080
+237  83  83 Red         #ED5353
+205 158 247 Purple      #CD9EF7
+255 161  84 Orange      #FFA154
+255 225 107 Yellow      #FFE16B
+255 255 255 White       #FFFFFF

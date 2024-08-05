@@ -1,0 +1,44 @@
+#!/bin/bash
+
+mask_i=$1
+inp=$2
+#outp=$3
+shift;shift;
+
+basic="-std=gnu++17 -O2 -g -Wall -Wextra -pedantic"
+#basic="-x c++ -lm -g -O -Wall -Wextra -pedantic"
+warnings="-Wshadow -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -Wcast-qual -Wcast-align"
+stl_tools="-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2"
+gcc_tools="-fno-sanitize-recover=all -fstack-protector"
+gcc_tools_slow="-fsanitize=address -fsanitize=undefined"
+extra="-DLOCAL -Wfatal-errors -DDBG_MACRO_NO_WARNING"
+input_rest="$@"
+
+groups=(
+    "$basic"
+    "$warnings"
+    "$stl_tools"
+    "$gcc_tools"
+    "$gcc_tools_slow"
+    "$extra"
+    "$input_rest"
+)
+
+masks=(
+    2#1100011
+    2#1101111
+)
+#mask_i=0
+mask=${masks[$mask_i]}
+echo $mask
+parameters=""
+
+for i in `seq 0 $((${#groups[@]} - 1))`
+do
+    if [ $(( $mask & $((1<<$i)) )) != 0 ]; then
+        parameters="$parameters ${groups[$i]}"
+    fi
+done
+echo $parameters
+
+Time g++ "$inp" -o "$inp.bin" $parameters && echo -e "COMPILED\n-----"

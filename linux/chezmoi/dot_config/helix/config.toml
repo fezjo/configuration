@@ -1,0 +1,21 @@
+# adawaita-dark ayu_dark dracula_at_night github_dark_dimmed molokai new_moon onedark voxed
+theme = "new_moon"
+
+[editor]
+auto-pairs = false
+bufferline = "multiple"
+color-modes = true
+cursorline = true
+rulers = [80, 100]
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.indent-guides]
+render = true
+
+[keys.normal]
+X = "extend_line_above"
+D = "delete_char_backward"

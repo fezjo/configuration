@@ -1,0 +1,60 @@
+#!/bin/bash
+
+export SDL_VIDEODRIVER=wayland
+export _JAVA_AWT_WM_NONREPARENTING=1
+export QT_QPA_PLATFORM=wayland
+export XDG_CURRENT_DESKTOP=sway
+export XDG_SESSION_DESKTOP=sway
+
+export XDG_CONFIG_HOME=/home/fezjo/.config
+export EDITOR=helix
+export TERMINAL=foot
+export MAKEFLAGS="$MAKEFLAGS -j$(expr $(nproc) \+ 1)"
+export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/src/go/bin:$HOME/.cargo/bin
+
+export MOZ_ENABLE_WAYLAND=1
+export MOZ_WEBRENDER=1
+export MOZ_ACCELERATED=1
+export MOZ_USE_XINPUT2=1
+
+alias cp='cp -iv'
+alias rcp='rsync -v --progress'
+alias rmv='rsync -v --progress --remove-source-files'
+alias mv='mv -iv'
+alias rm='rm -Iv'
+alias rmdir='rmdir -v'
+alias ln='ln -v'
+alias chmod="chmod -c"
+alias chown="chown -c"
+alias mkdir="mkdir -v"
+alias cf="cf-tool"
+alias fd="fd --exclude=/run"
+alias du='du -h'
+
+alias grep='grep --colour=auto'
+alias egrep='egrep --colour=auto'
+alias ls='ls --color=auto --human-readable --group-directories-first --classify'
+alias l='ls -al --color=auto --human-readable --group-directories-first --classify'
+
+alias dyff="diff -W $COLUMNS --color=always --suppress-common-lines -y"
+alias cloc=tokei
+alias djvu2pdf='docker run --rm -u $(id -u):$(id -g) -v $(pwd):/opt/work ilyabystrov/djvu2pdf'
+alias hx=helix
+
+cpr() {
+  rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"
+} 
+mvr() {
+  rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"
+}
+
+function yy() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+
+eval "$(antidot init)"
