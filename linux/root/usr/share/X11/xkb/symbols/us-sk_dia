@@ -1,0 +1,5 @@
+xkb_symbols "us-sk_dia" {
+    include "us(altgr-intl)"
+    key <LSGT> { [ dead_acute, dead_caron, ocircumflex, adiaeresis ] };
+};
+
