@@ -1,0 +1,20 @@
+[user]
+	name = Jozef Číž
+	email = jozef.ciz.ml@gmail.com
+	signingkey = jozef.ciz.ml@gmail.com
+[cola]
+	spellcheck = false
+[commit]
+	gpgsign = true
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[core]
+	excludesFile = /home/fezjo/.config/git/gitignore
+[rerere]
+	enabled = true
+[push]
+	autoSetupRemote = true
+
+[gpg]
+	program = /usr/bin/gpg

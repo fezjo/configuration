@@ -1,0 +1,19 @@
+# XONSH WEBCONFIG START
+$PROMPT = '[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} {BOLD_GREEN}{cwd} {gitstatus}{RESET}\r\n> '
+# XONSH WEBCONFIG END
+
+exec($(carapace _carapace))
+xontrib load autojump
+
+$XONTRIB_SH_SHELLS = ['zsh', 'bash', 'sh', 'fish']
+xontrib load sh
+
+# $XONTRIB_PROMPT_STARSHIP_LEFT_CONFIG = "~/.config/starship_xonsh_left.toml"
+# $XONTRIB_PROMPT_STARSHIP_RIGHT_CONFIG = "~/.config/starship_xonsh_right.toml"
+# $XONTRIB_PROMPT_STARSHIP_BOTTOM_CONFIG = "~/.config/starship_xonsh_bottom.toml"
+# xontrib load prompt_starship
+execx($(starship init xonsh))
+
+$FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = True
+source-bash ~/.config/.profile
+$FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = False

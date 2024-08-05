@@ -1,0 +1,12 @@
+#!/bin/bash
+
+until ping -nq -c1 8.8.8.8; do
+   echo "Waiting for network..."
+   sleep 5
+done
+
+systemctl stop ntpd
+ntpdate pool.ntp.org
+systemctl restart ntpd
+
+echo "Time updated"

@@ -1,0 +1,46 @@
+{
+  "template": [
+    {
+      "alias": "cpp",
+      "lang": "54",
+      "path": "/home/fezjo/Templates/CppTemplate.cpp",
+      "suffix": [
+        "cpp"
+      ],
+      "before_script": "Cppcompile2 1 $%full%$ $%file%$.bin -Wfatal-errors",
+      "script": "Time ./$%file%$.bin",
+      "after_script": ""
+    },
+    {
+      "alias": "tester",
+      "lang": "47",
+      "path": "/home/fezjo/Templates/tester_template.py",
+      "suffix": [],
+      "before_script": "",
+      "script": "python3 $%full%$",
+      "after_script": ""
+    },
+    {
+      "alias": "py",
+      "lang": "41",
+      "path": "/home/fezjo/Templates/PyTemplate.py",
+      "suffix": [
+        "py"
+      ],
+      "before_script": "",
+      "script": "python $%full%$",
+      "after_script": ""
+    }
+  ],
+  "default": 0,
+  "gen_after_parse": true,
+  "host": "https://codeforces.com",
+  "proxy": "",
+  "folder_name": {
+    "acmsguru": "acmsguru",
+    "contest": "contest",
+    "group": "group",
+    "gym": "gym",
+    "root": "cf"
+  }
+}
