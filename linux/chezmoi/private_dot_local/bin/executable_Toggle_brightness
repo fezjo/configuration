@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ "$(brightnessctl g)" == 0* ]]; then
+    brightnessctl s 100%
+else
+    brightnessctl s 0%
+fi

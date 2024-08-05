@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# echo "$@"
+
+/usr/bin/time -f "-----\nEXIT STATUS:%x\tCPU:%P\nReal:%es System:%Ss User:%Us | Memory:%MKB" "$@"

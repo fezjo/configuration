@@ -1,0 +1,3 @@
+#!/bin/bash
+
+MAKEFLAGS="-j$(nproc --ignore 1)" PKGEXT='.pkg.tar' yay --mflags "--nocheck" $@

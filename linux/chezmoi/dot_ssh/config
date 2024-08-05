@@ -1,0 +1,36 @@
+IdentityFile ~/.ssh/ssh_fezjo
+IdentityFile ~/.ssh/id_ed25519_vl
+
+  Host knut
+    HostName knut
+    User fezjo
+
+Host ksp.sk
+    HostkeyAlgorithms +ssh-rsa
+    PubkeyAcceptedAlgorithms +ssh-rsa
+
+Host element.ksp.sk
+    HostkeyAlgorithms +ssh-rsa
+    PubkeyAcceptedAlgorithms +ssh-rsa
+
+Host matfyz-davinci
+    HostName davinci.fmph.uniba.sk
+    User ciz5
+
+Host matfyz-mad
+    HostName vyuka.compbio.fmph.uniba.sk
+    User ciz5
+
+Host szelepcsenyi
+    HostName sammserver.com
+    User fezjo
+    Port 11001
+
+Host knut-local
+    HostName 192.168.1.200
+    User fezjo
+
+Host experiment
+    HostName testament.3sten.sk
+    User jozef.ciz
+    Port 5422

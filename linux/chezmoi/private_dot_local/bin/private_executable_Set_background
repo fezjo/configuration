@@ -1,0 +1,26 @@
+#!/bin/bash
+
+bgpath="/home/fezjo/Pictures/.background.png" 
+
+function generate() {
+pscircle \
+    --output="$bgpath" \
+    --output-width=1920 --output-height=1080 \
+    --background-color=000000FF \
+    --collapse-threads=1 --root-pid=1 \
+    --show-root=1 \
+    --tree-center=-300:0 \
+    --tree-font-size=12 --tree-radius-increment=100,150,75 \
+    --tree-anchor-proc-name=runsvdir \
+    --dot-radius=4 \
+    --max-children=90 \
+    --cpulist-center=400:-300 --memlist-center=400:300 \
+    --memlist-name=RAM
+}
+
+while :
+do
+    generate
+    feh --bg-center "$bgpath"
+    sleep 5;
+done

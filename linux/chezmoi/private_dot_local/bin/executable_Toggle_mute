@@ -1,0 +1,27 @@
+#!/bin/bash
+
+sources=("alsa_input.usb-RODE_Microphones_RODE_NT-USB-00.analog-stereo")
+
+function pactl_imp() {
+    mute() {
+        pactl set-source-mute "$1" toggle
+    }
+
+    state=$(pactl list sources | awk '{if ($1 == "Name:") printf "%s ", $2; if($1 == "Mute:") print $2}')
+    echo
+    for source in ${sources[@]} ; do
+        mute "$source" &&
+            echo "$(echo "$state" | grep $source | tail -1 | cut -d " " -f 2) $source"
+    done
+}
+
+function pamixer_imp() {
+    echo
+    for source in ${sources[@]} ; do
+        state=$(pamixer --source "$source" --get-mute)
+        pamixer --source "$source" --toggle-mute &&
+            echo "$state $source"
+    done
+}
+
+pamixer_imp

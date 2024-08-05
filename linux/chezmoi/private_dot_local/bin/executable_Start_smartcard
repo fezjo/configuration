@@ -1,0 +1,11 @@
+#!/bin/bash
+
+export QT_QPA_PLATFORM=xcb
+
+pcsc_scan -r
+pcsc_scan -c
+
+~/.local/share/dlauncher2/dLauncher2 &
+EAC_MW_klient &
+eidklient &
+/opt/disig/websigner/bin/WebSignerTray.sh &
