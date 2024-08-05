@@ -17,11 +17,11 @@ mpd ncmpcpp
 polkit gnome-keyring polkit-gnome bluez nm-applet networkmanager
 sway swaylock swayi3dle wev wdisplays xorg-xwayland foot xdg-desktop-portal[,-wlr] grim slurp wl-copy kanshi wlsunset sway-systemd
 dracut efibootmgr
-mousepad nemo
+mousepad thunar
 pscircle
 cf-tool time zip unzip atool
 xonsh python-pip python-sympy 
-man-pages nemo-samba wsdd
+man-pages wsdd
 unrar
 firacode noto-fonts-emoji
 geary gnome-control-center
@@ -122,13 +122,22 @@ hyperland xdg-desktop-portal-hyprland
 
 ### Terminal
 ```
-bash zsh fish
+bash zsh fish xonsh
 oh-my-zsh-git zsh-theme-powerlevel10k
 chezmoi xdg-ninja antidot-bin
 tmux foot alacritty
 bottom htop
 bat rsync wormhole-william time
 zip unzip atool unrar
+tldr dust atuin ripgrep thefuck
+neofetch
+zellij yazi ripdrag
+# zsh4humans
+```
+
+#### Rust terminal
+```
+atuin bat bottom bustd dust eza fd ouch ripgrep yazi zellij
 ```
 
 ### Disk
@@ -141,23 +150,36 @@ baobab gnome-disk-utility gparted tokei
 visual-studio-code-bin idlex
 micro neovim helix
 mousepad libreoffice
-tectonic pandoc texlive texlive-langczechslovak
+tectonic pandoc texlive texlive-langczechslovak typst
 ```
 
 ### Programming
 ```
 valgrind
-git lazygit git-delta
+git lazygit git-delta meld gitbutler-bin
+rye uv ruff
 cf-tool testlib dbg-macro
 docker
 ```
 
 # Setup
 
+### Keyboard
+
+```bash
+localectl set-x11-keymap us-sk_dia
+localectl
+```
+
 ### Make
 ```bash
 # /etc/makepkg.conf
 MAKEFLAGS="-j$(nproc --ignore 1)"
+LDFLAGS="... -fuse-ld=mold"
+RUSTFLAGS="... -C link-arg=-fuse-ld=mold"
+
+PKGEXT='.pkg.tar'
+SRCEXT='.src.tar'
 ```
 
 ### No beep
@@ -188,6 +210,19 @@ EOB
 sudo chmod +x /usr/local/bin/gprename-nemo
 dconf write /org/nemo/preferences/bulk-rename-tool "b'gprename-nemo'"
 ```
+
+### Thunar
+Configure custom actions -> Terminal -> Command: `foot -D %f`
+Preferences:
+  Display:
+    Remember view settings for each folder
+    Text beside icons
+    Date format: Today at 23:56:36
+  Behavior:
+    Show full directory paths in tab titles
+  Advanced:
+    Verify file checksum on copy: Always
+
 
 ### P10k
 ```bash
@@ -248,4 +283,16 @@ netctl verify mystatic
 ip link set <enpXsY> down
 netctl enable mystatic
 netctl start mystatic
+```
+
+### Python
+
+```bash
+#install
+pypy3 python-pipx
+
+pipx ensurepath
+
+pipx completions
+# read and follow whats printed
 ```
