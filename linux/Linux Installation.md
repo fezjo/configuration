@@ -55,7 +55,7 @@ wine
 #### Daemons
 ```
 keyd
-solaar safeeyes
+solaar stretchly safeeyes
 bluez nm-applet networkmanager
 parsec-bin
 flameshot redshift
@@ -81,12 +81,20 @@ discord geary telegram-desktop slack
 ### Random
 ```
 pscircle tk
-nerd-fonts-roboto-mono ttf-firacode-nerd noto-fonts-emoji
+nerd-fonts-roboto-mono ttf-firacode-nerd noto-fonts-emoji ttf-ms-win11-auto
 ```
 
 ### Virtualization
 ```
-qemu-desktop libvirt virt-manager virtualbox
+qemu-desktop libvirt
+quickemu virt-manager virtualbox
+distrobox
+```
+
+### Configuration
+```
+aconfmgr
+chezmoi xdg-ninja antidot-bin
 ```
 
 ## Desktop manager
@@ -124,7 +132,6 @@ hyperland xdg-desktop-portal-hyprland
 ```
 bash zsh fish xonsh
 oh-my-zsh-git zsh-theme-powerlevel10k
-chezmoi xdg-ninja antidot-bin
 tmux foot alacritty
 bottom htop
 bat rsync wormhole-william time
@@ -158,11 +165,20 @@ tectonic pandoc texlive texlive-langczechslovak typst
 valgrind
 git lazygit git-delta meld gitbutler-bin
 rye uv ruff
+hyperfine
 cf-tool testlib dbg-macro
 docker
 ```
 
 # Setup
+
+### Tailscale
+```bash
+pacman -S tailscale
+systemctl enable --now tailscaled
+tailscale up
+tailscale set --ssh
+```
 
 ### Keyboard
 
@@ -295,4 +311,14 @@ pipx ensurepath
 
 pipx completions
 # read and follow whats printed
+```
+
+
+### systemctl services
+```
+systemd-resolved
+  - pozri wiki
+  - sprav link /etc/resolv.conf na /run/...
+  - package systemd-resolvconf
+systemd-timesyncd
 ```

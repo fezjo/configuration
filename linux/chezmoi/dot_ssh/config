@@ -1,7 +1,8 @@
 IdentityFile ~/.ssh/ssh_fezjo
 IdentityFile ~/.ssh/id_ed25519_vl
+ForwardX11 yes
 
-  Host knut
+Host knut
     HostName knut
     User fezjo
 
@@ -34,3 +35,7 @@ Host experiment
     HostName testament.3sten.sk
     User jozef.ciz
     Port 5422
+
+Host snail
+    Hostname snellius.surf.nl
+    User scur1738
