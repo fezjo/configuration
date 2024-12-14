@@ -23,7 +23,9 @@ set $term footclient
 #set $menu dmenu_path | dmenu | xargs swaymsg exec --
 #set $menu bemenu-run --nb "#3f3f3f" --nf "#dcdccc" | xargs swaymsg exec --
 #set $menu wofi -diI -S drun,run | xargs swaymsg exec --
-set $menu  rofi -show combi -modes "combi,filebrowser,calc,keys,window" -combi-modes "drun,run"
+set $menu  rofi -show combi \
+                -modes "combi,filebrowser,calc,:rofi-sound-output-chooser,keys,window" \
+                -combi-modes "drun,run"
 
 #set $cm-paste cliphist list | rofi -dmenu | cliphist decode | wl-copy
 set $cm-paste dmenu-copyq.sh
@@ -47,9 +49,11 @@ output * bg "#000000" solid_color
 #
 # You can get the names of your outputs by running: swaymsg -t get_outputs
 # output eDP-1 scale 1.15
-output eDP-1 mode 2560x1600 position 5120 0 scale 1.15
-output DP-1 mode 2560x1440@170Hz position 2560 0
-output DP-2 mode 2560x1080 position 0 0
+#output eDP-1 mode 2560x1600 position 5120 0 scale 1.15
+#output DP-1 mode 2560x1440@170Hz position 2560 0
+#output DP-2 mode 2560x1080 position 0 0
+output eDP-1 mode 2560x1600 position 0 0 scale 1.15
+output DP-2 mode 2560x1600 position 2229 0
 
 set $lock_command Blurlock
 exec swayidle -w \
@@ -65,7 +69,7 @@ exec dunst
 exec wl-paste --watch cliphist store
 exec wlsunset -l 48 -L 17 -t 3000 -T 5500
 exec solaar -w hide
-exec safeeyes
+#exec safeeyes
 #exec redshift-gtk
 exec copyq
 #exec clipmenud
@@ -142,7 +146,8 @@ input "type:keyboard" {
 
     # Start your launcher
     bindsym $mod+d exec $menu
-    bindsym $mod+t exec thunar
+    #bindsym $mod+t exec thunar
+    bindsym $mod+t exec $term -e yazi
     bindsym $mod+p exec loginctl lock-session
     bindsym $mod+Shift+p exec 'Blurlock && sleep 1 && systemctl suspend'
     bindsym $mod+Control+v exec $cm-paste
