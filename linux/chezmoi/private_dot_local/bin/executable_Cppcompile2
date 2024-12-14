@@ -1,11 +1,92 @@
 #!/bin/bash
 
+function grayecho() {
+    echo -e "\033[30m$@\033[0m"
+}
+function redecho() {
+    echo -e "\033[31m$@\033[0m"
+}
+function greenecho() {
+    echo -e "\033[32m$@\033[0m"
+}
+function yellowecho() {
+    echo -e "\033[33m$@\033[0m"
+}
+function blueecho() {
+    echo -e "\033[34m$@\033[0m"
+}
+function purpleecho() {
+    echo -e "\033[35m$@\033[0m"
+}
+
+function precompile() {
+    parameters="$@"
+    precompile=1
+    # we will precompile stdc++.h and extc++.h to speed up compilation
+    # we will hash the flags to determine if we need to recompile them
+    # we cache these precompiled headers in .local/include/c++-hash
+    # with the help of -I flag we can include them in our code
+
+    stdc=$(ls /usr/include/c++/*/*/bits/stdc++.h | sort -r | head -n 1)
+    if [ -z "$stdc" ]; then
+        redecho "stdc++.h not found"
+        precompile=0
+    fi
+
+    extc=$(ls /usr/include/c++/*/*/bits/extc++.h | sort -r | head -n 1)
+    if [ -z "$extc" ]; then
+        redecho "extc++.h not found"
+        precompile=0
+    fi
+
+    if [ $precompile -eq 1 ]; then
+        hash=$(echo $parameters | md5sum | cut -d ' ' -f 1)
+        precomp_dir=~/.local/include/c++-$hash
+        mkdir -p $precomp_dir
+
+        local_stdc=$precomp_dir/stdc++.h
+        local_stdc_gch=$precomp_dir/stdc++.h.gch
+        local_extc=$precomp_dir/extc++.h
+        local_extc_gch=$precomp_dir/extc++.h.gch
+        if [ ! -f "$local_stdc" ]; then
+            blueecho "Copying stdc++.h"
+            cp $stdc $local_stdc
+        fi
+        if [ ! -f "$local_extc" ]; then
+            blueecho "Copying extc++.h"
+            cp $extc $local_extc
+        fi
+        if [ ! -f "$local_stdc_gch" ]; then
+            blueecho "Precompiling stdc++.h"
+            g++ -x c++-header $local_stdc -o $local_stdc_gch $parameters
+            if [ $? -ne 0 ]; then
+                redecho "Failed to precompile stdc++.h"
+                return 1
+            fi
+        fi
+        if [ ! -f "$local_extc_gch" ]; then
+            blueecho "Precompiling extc++.h"
+            g++ -x c++-header $local_extc -o $local_extc_gch $parameters
+            if [ $? -ne 0 ]; then
+                redecho "Failed to precompile extc++.h"
+                return 1
+            fi
+        fi
+        greenecho "Precompiled headers are in $precomp_dir"
+        parameters="$parameters -include $local_stdc -include $local_extc"
+    else
+        redecho "Precompilation is disabled"
+        return 1
+    fi
+}
+
+
 mask_i=$1
 inp=$2
 #outp=$3
 shift;shift;
 
-basic="-std=gnu++17 -O2 -g -Wall -Wextra -pedantic"
+basic="-std=c++20 -O2 -g -Wall -Wextra -pedantic"
 #basic="-x c++ -lm -g -O -Wall -Wextra -pedantic"
 warnings="-Wshadow -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -Wcast-qual -Wcast-align"
 stl_tools="-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2"
@@ -30,7 +111,7 @@ masks=(
 )
 #mask_i=0
 mask=${masks[$mask_i]}
-echo $mask
+greenecho $mask
 parameters=""
 
 for i in `seq 0 $((${#groups[@]} - 1))`
@@ -39,6 +120,7 @@ do
         parameters="$parameters ${groups[$i]}"
     fi
 done
-echo $parameters
-
+grayecho $parameters
+precompile $parameters
+grayecho $parameters
 Time g++ "$inp" -o "$inp.bin" $parameters && echo -e "COMPILED\n-----"

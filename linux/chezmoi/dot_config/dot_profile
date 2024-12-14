@@ -17,6 +17,10 @@ export MOZ_WEBRENDER=1
 export MOZ_ACCELERATED=1
 export MOZ_USE_XINPUT2=1
 
+export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+
+export CXXFLAGS="-std=c++20 -O2 -g -Wall -Wextra -pedantic -Wshadow=local -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -Wcast-qual -Wcast-align -DLOCAL -Wfatal-errors -DDBG_MACRO_NO_WARNING"
+
 alias cp='cp -iv'
 alias rcp='rsync -v --progress'
 alias rmv='rsync -v --progress --remove-source-files'
@@ -41,6 +45,8 @@ alias cloc=tokei
 alias djvu2pdf='docker run --rm -u $(id -u):$(id -g) -v $(pwd):/opt/work ilyabystrov/djvu2pdf'
 alias hx=helix
 
+alias ubuntu='distrobox enter ubuntu -e sh -c "fastfetch && zsh"'
+
 cpr() {
   rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"
 } 
@@ -56,5 +62,23 @@ function yy() {
 	fi
 	rm -f -- "$tmp"
 }
+
+function cfopen() {
+    url="$1"
+    num=$(echo $url | grep -oP '\d+')
+    char=$(echo $url | grep -oP '(?<=/)[^/]*$' | tr '[:upper:]' '[:lower:]')
+    dir=$(cf parse $url | grep "will be saved to" | awk '{print $7}')
+    cd $dir/$char
+    code $char.cpp
+}
+
+function cr() {
+    exe=${1%.*}
+    make $exe && printf "compiled\n----------\n" && Time ./$exe
+}
+
+export PYENV_ROOT="$HOME/.local/share/pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PATH:$PYENV_ROOT/bin"
+eval "$(pyenv init -)"
 
 eval "$(antidot init)"
