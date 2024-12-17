@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #CONFIG=/home/fezjo/src/configuration/linux/
 CONFIG=.
@@ -9,6 +9,8 @@ chsh
 
 fuck
 fuck
+
+mise use -g usage
 
 # ZSwap
 sudo btrfs subvolume create /swap

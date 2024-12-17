@@ -19,6 +19,7 @@
 + dracut
 + efibootmgr
 + chezmoi
++ etckeeper
 + xdg-ninja
 + antidot-bin
 
@@ -30,13 +31,13 @@
 + gnome-control-center
 + lxappearance-gtk3
 + seahorse
-+ gnome-power-statistics
++ gnome-power-manager
 + gnome-clocks
 
 ## Window Managers
 - polybar
-+ rofi
-+ rofi-calc
++ rofi-wayland
++ rofi-calc-git
 
 ### i3
 - i3-wm
@@ -62,11 +63,11 @@
 ## Wayland Tools
 + wev
 + wdisplays
-+ xorg-wayland
++ xorg-xwayland
 + xdg-desktop-portal-wlr
 + grim
 + slurp
-+ wl-copy
++ wl-clipboard
 + kanshi
 + wlsunset
 
@@ -77,7 +78,6 @@
 + bluez
 + bluez-utils
 + blueman
-+ nm-applet
 + networkmanager
 + parsec-bin
 
@@ -86,7 +86,9 @@
 + baobab
 + gnome-disk-utility
 + gparted
-+ tokei
++ tokei # rust
++ gprename
++ stress-ng
 
 # Shell & Terminal
 ## Shells
@@ -96,45 +98,49 @@
 + xonsh
 + oh-my-zsh-git
 + zsh-theme-powerlevel10k
-+ zsh4humans
 
 ## Terminal Emulators
-+ foot
 + alacritty
++ foot
 
 ## Terminal Multiplexers
 + tmux
 + zellij
 
 ## Terminal Tools (Rust)
-+ bottom
-+ bat
-+ dust
-+ atuin
-+ ripgrep
-+ yazi
-+ eza
-+ fd
-+ ouch
-+ bustd
++ atuin           # history
++ bat             # cat
++ bottom          # htop
++ bustd           # oom
++ choose          # cut
++ dust            # du
++ eza             # ls
++ fd              # find
++ ouch            # atool
++ ripgrep         # grep
++ sd              # sed
++ wormhole-rs-bin # magic-wormhole
++ yazi            # filemanager
++ zoxide          # cd
 
 ## Terminal Tools (Non-Rust)
-+ htop
-+ rsync
-- magic-wormhole
-- wormhole-william
-+ wormhole-rs-bin
-+ time
-+ ov
-+ zip
-+ unzip
 + atool
-+ unrar
-+ tldr
-+ thefuck
-+ neofetch
++ fastfetch
++ fortune-mod
++ fzf # go
++ glow # go
++ htop
+- magic-wormhole
+- ov # go
 + ripdrag
-+ glow
++ rsync
++ thefuck
++ time
++ tldr
++ unrar
++ unzip
+- wormhole-william # go
++ zip
 
 # Browsers & Internet
 + zen-browser-bin
@@ -148,7 +154,7 @@
 + feh
 + gimp
 + pinta
-+ viewnoir
++ viewnior
 + flameshot
 
 ## Audio/Video
@@ -171,18 +177,18 @@
 
 # Development Tools
 ## Text Editors & IDEs
-+ visual-studio-code-bin
-+ zed
-+ micro
-+ neovim
-+ helix
-+ mousepad
++ helix # rust
 + libreoffice
++ micro # go
++ mousepad
++ neovim
++ visual-studio-code-bin
++ zed # rust
 
 ## Version Control
 + git
-+ lazygit
-+ git-delta
++ lazygit # go
++ git-delta # rust
 + meld
 + gitbutler-bin
 
@@ -199,11 +205,11 @@
 
 ## Programming Tools
 + valgrind
-+ rye
-+ uv
-+ ruff
-+ mise
-+ hyperfine
++ rye # rust
++ uv # rust
++ ruff # rust
++ mise # rust
++ hyperfine # rust
 + cf-tool
 + testlib
 + dbg-macro
