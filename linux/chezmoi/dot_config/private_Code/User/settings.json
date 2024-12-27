@@ -1,0 +1,21 @@
+{
+    "[markdown]": {
+        "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+        "editor.wordWrap": "bounded"
+    },
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "editor.autoClosingBrackets": "never",
+    "editor.autoClosingQuotes": "never",
+    "editor.fontFamily": "'HackNerd', 'Droid Sans Mono', 'monospace', monospace",
+    "editor.rulers": [80, 100],
+    "files.associations": {
+        "idf": "r"
+    },
+    "notebook.output.scrolling": true,
+    "security.workspace.trust.enabled": false,
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
+    "terminal.integrated.persistentSessionScrollback": 1000,
+    "terminal.integrated.scrollback": 100000,
+    "window.menuBarVisibility": "compact",
+    "workbench.sideBar.location": "right",
+}

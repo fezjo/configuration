@@ -1,6 +1,5 @@
 IdentityFile ~/.ssh/ssh_fezjo
 IdentityFile ~/.ssh/id_ed25519_vl
-ForwardX11 yes
 
 Host knut
     HostName knut
@@ -22,7 +21,7 @@ Host matfyz-mad
     HostName vyuka.compbio.fmph.uniba.sk
     User ciz5
 
-Host szelepcsenyi
+Host szelepcsenyi_old
     HostName sammserver.com
     User fezjo
     Port 11001
@@ -39,3 +38,7 @@ Host experiment
 Host snail
     Hostname snellius.surf.nl
     User scur1738
+
+Host snail-viki
+    Hostname snellius.surf.nl
+    User scur2768
