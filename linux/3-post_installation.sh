@@ -38,6 +38,8 @@ localectl
 
 # Python
 pipx ensurepath
+pypy3 -m ensurepip
+pypy3 -m pip install matplotlib
 
 # SSH
 sudo systemctl enable --now sshd
@@ -49,6 +51,29 @@ sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 # Time
 sudo systemctl enable --now systemd-timesyncd
 
+# Docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+
+# Distrobox
+(
+repo=yay-bin
+setup="
+sudo pacman -S --needed --noconfirm git base-devel &&
+([ -d $repo ] &&
+  (cd $repo && pwd && git pull) ||
+  git clone https://aur.archlinux.org/yay-bin.git $repo
+) &&
+cd $repo &&
+makepkg -si --noconfirm &&
+yay -S --noconfirm fastfetch &&
+echo success
+"
+boxname=arch-test
+mkdir -p distrobox &&
+cd distrobox &&
+distrobox enter $boxname -- sh -c "$setup";
+)
 
 cat <<EOF
 check that pacman-mirrors are ok

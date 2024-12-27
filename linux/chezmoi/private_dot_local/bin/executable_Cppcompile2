@@ -123,4 +123,10 @@ done
 grayecho $parameters
 precompile $parameters
 grayecho $parameters
+CXXFLAGS=$parameters
+
+if [ -f $inp.bin ] && [ $inp.bin -nt $inp ]; then
+    purpleecho "BIN UP TO DATE"
+    exit 0
+fi
 Time g++ "$inp" -o "$inp.bin" $parameters && echo -e "COMPILED\n-----"

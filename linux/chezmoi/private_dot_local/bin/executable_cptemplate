@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# get file.suffix as argument
+# based on suffix, copy ~/Templates/template.suffix to current directory
+# if file does not exist, create empty file
+
+file=$1
+suffix="${file##*.}"
+
+if [[ -f ~/Templates/template.$suffix ]]; then
+    cp ~/Templates/template.$suffix ./"$file"
+else
+    touch ./"$file"
+fi

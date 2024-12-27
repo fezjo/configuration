@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ -z "$CFEDITOR" ]; then CFEDITOR=code; fi
+
+url="$1"
+num=$(echo $url | grep -oP '\d+')
+char=$(echo $url | grep -oP '(?<=/)[^/]*$' | tr '[:upper:]' '[:lower:]')
+dir=$(cf parse $url | grep "will be saved to" | awk '{print $7}')
+cd $dir/$char
+$CFEDITOR $char.cpp

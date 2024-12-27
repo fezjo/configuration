@@ -3,6 +3,7 @@
 # System Core & Base
 + base
 + base-devel
++ linux-lts
 + linux-tools
 + mold
 + man
@@ -28,8 +29,9 @@
 + dconf
 + dconf-editor
 + budgie-control-center
-+ gnome-control-center
+- gnome-control-center
 + lxappearance-gtk3
++ nwg-look
 + seahorse
 + gnome-power-manager
 + gnome-clocks
@@ -72,23 +74,24 @@
 + wlsunset
 
 # Network & Connectivity
-+ tailscale
-+ openssh
-+ netctl
++ blueman
 + bluez
 + bluez-utils
-+ blueman
++ netctl
 + networkmanager
++ openbsd-netcat
++ openssh
 + parsec-bin
++ tailscale
 
 # File Management & System Tools
 + thunar
-+ baobab
++ baobab # disk usage
 + gnome-disk-utility
 + gparted
-+ tokei # rust
-+ gprename
++ tokei # rust, cloc
 + stress-ng
++ szyszka-bin # rust, batch rename
 
 # Shell & Terminal
 ## Shells
@@ -102,6 +105,7 @@
 ## Terminal Emulators
 + alacritty
 + foot
++ ghostty
 
 ## Terminal Multiplexers
 + tmux
@@ -119,6 +123,7 @@
 + ouch            # atool
 + ripgrep         # grep
 + sd              # sed
++ tealdeer        # tldr
 + wormhole-rs-bin # magic-wormhole
 + yazi            # filemanager
 + zoxide          # cd
@@ -131,12 +136,13 @@
 + glow # go
 + htop
 - magic-wormhole
++ nvtop
 - ov # go
 + ripdrag
 + rsync
 + thefuck
 + time
-+ tldr
+- tldr++ # go, interactive tldr
 + unrar
 + unzip
 - wormhole-william # go
@@ -156,6 +162,8 @@
 + pinta
 + viewnior
 + flameshot
++ swww
++ waypaper-git # chaotic-aur
 
 ## Audio/Video
 + mpv
@@ -172,6 +180,7 @@
 # Communication
 + discord
 + geary
++ thunderbird
 + telegram-desktop
 + slack
 
@@ -216,6 +225,7 @@
 + docker
 
 ## Documentation & Publishing
++ evince
 + typst
 + tectonic
 + pandoc
@@ -242,7 +252,7 @@
 + wine
 
 # Fonts
-+ ttf-roboto-mono-nerd
+- ttf-roboto-mono-nerd
 + ttf-hack-nerd
 + ttf-firacode-nerd
 + noto-fonts-emoji

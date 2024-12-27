@@ -1,0 +1,96 @@
+#!/bin/sh
+
+export ENV_PROFILES="$ENV_PROFILES:.profile/start"
+
+# # Set desktop and session type
+# XDG_SESSION_TYPE = "wayland"
+# XDG_CURRENT_DESKTOP = "sway"
+# XDG_SESSION_DESKTOP = "sway"
+
+# # Specify Wayland backends for various applications
+# MOZ_ENABLE_WAYLAND = "1"
+# OZONE_PLATFORM = "wayland"
+# GDK_BACKEND = "wayland"
+# QT_QPA_PLATFORM = "wayland"
+
+export BROWSER=floorp
+export EDITOR=helix
+export TERM=foot
+export TERMINAL=foot
+
+export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+export MAKEFLAGS="$MAKEFLAGS -j$(expr $(nproc) \+ 1)"
+export CXXFLAGS="-std=c++20 -O2 -g -Wall -Wextra -pedantic -Wshadow=local -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -Wcast-qual -Wcast-align -DLOCAL -Wfatal-errors -DDBG_MACRO_NO_WARNING"
+
+export XDG_DATA_HOME="${XDG_DATA_HOME:=$HOME/.local/share}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:=$HOME/.config}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:=$HOME/.local/state}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:=$HOME/.cache}"
+
+export _JAVA_OPTIONS="-Djava.util.prefs.userRoot="${XDG_CONFIG_HOME}"/java"
+export ANDROID_HOME="${XDG_DATA_HOME}/android"
+export CARGO_HOME="${XDG_DATA_HOME}/cargo"
+export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
+export GNUPGHOME="${XDG_DATA_HOME}/gnupg"
+export GOPATH="${XDG_DATA_HOME}/go"
+export GOPATH="${XDG_DATA_HOME}/go"
+export GRADLE_USER_HOME="${XDG_DATA_HOME}/gradle"
+export GTK2_RC_FILES="${XDG_CONFIG_HOME}/gtk-2.0/gtkrc"
+export HISTFILE="${XDG_CACHE_HOME}/bash/history"
+export JUPYTER_CONFIG_DIR="${XDG_CONFIG_HOME}/jupyter"
+export LESSHISTFILE="${XDG_CACHE_HOME}/less/history"
+export LESSKEY="${XDG_CONFIG_HOME}/less/lesskey"
+export NODE_REPL_HISTORY="${XDG_CACHE_HOME}/node_repl_history"
+export npm_config_cache="${XDG_CACHE_HOME}/npm"
+export NVM_DIR="${XDG_DATA_HOME}/nvm"
+export PYENV_ROOT="${XDG_DATA_HOME}/pyenv"
+export R_HISTFILE="${XDG_CONFIG_HOME}/R/history"
+export R_HOME_USER="${XDG_CONFIG_HOME}/R"
+export R_PROFILE_USER="${XDG_CONFIG_HOME}/profile"
+export RUSTUP_HOME="${XDG_DATA_HOME}/rustup"
+export SQLITE_HISTORY="${XDG_CACHE_HOME}/sqlite_history"
+export TERMINFO_DIRS="${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
+export TERMINFO="${XDG_DATA_HOME}/terminfo"
+export TEXMFVAR="${XDG_CACHE_HOME}/texlive/texmf-var"
+export XCURSOR_PATH=/usr/share/icons:$XDG_DATA_HOME/icons
+export WINEPREFIX="${XDG_DATA_HOME}/wine"
+
+PATH="/home/fezjo/.local/bin:$PATH"
+
+alias cp='cp -iv'
+alias mv='mv -iv'
+alias rm='rm -Iv'
+alias ln='ln -v'
+alias mkdir="mkdir -v"
+alias rmdir='rmdir -v'
+alias rcp='rsync -v --progress'
+alias rmv='rsync -v --progress --remove-source-files'
+alias chmod="chmod -c"
+alias chown="chown -c"
+
+# alias ls='ls --color=auto --human-readable --group-directories-first --classify'
+# alias ll='ls -al --color=auto --human-readable --group-directories-first --classify'
+alias ls='eza --color=auto --group-directories-first --classify'
+alias ll='eza --color=auto --group-directories-first --classify -al'
+alias fd="fd --exclude=/run"
+alias du='du -h --apparent-size'
+
+# alias grep='ripgrep --colour=auto'
+alias grep='echo "use rg" && sleep 3 && /usr/bin/grep --color=auto'
+alias egrep='egrep --colour=auto'
+alias dyff="diff -W $COLUMNS --color=always --suppress-common-lines -y"
+
+alias cloc=tokei
+alias hx=helix
+alias py=pypy3
+alias cf=cf-tool
+alias xo=xdg-open
+
+alias cpr='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1'
+alias mvr='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files'
+
+alias ubuntu='distrobox enter ubuntu -e sh -c "fastfetch && zsh"'
+alias arch-test='distrobox enter arch-test -e sh -c "fastfetch && fish"'
+alias djvu2pdf='docker run --rm -u $(id -u):$(id -g) -v $(pwd):/opt/work ilyabystrov/djvu2pdf'
+
+export ENV_PROFILES="$ENV_PROFILES:.profile/end"

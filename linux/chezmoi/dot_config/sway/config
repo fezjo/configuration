@@ -1,21 +1,18 @@
+include $HOME/.config/sway/config.d/*
+
+unbindsym $mod+d
+unbindsym $mod+f1
+unbindsym $mod+p
+bindsym $mod+tab exec ~/.config/sway/scripts/window_switcher.sh
+
+set $resizestep 50px
+
 # Default config for sway
 #
 # Copy this to ~/.config/sway/config and edit it to your liking.
 #
 # Read `man 5 sway` for a complete reference.
 xwayland enable
-
-### Variables
-#
-# Logo key. Use Mod1 for Alt.
-set $mod Mod4
-# Home row direction keys, like vim
-set $left h
-set $down j
-set $up k
-set $right l
-# Your preferred terminal emulator
-set $term footclient
 
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
@@ -24,7 +21,7 @@ set $term footclient
 #set $menu bemenu-run --nb "#3f3f3f" --nf "#dcdccc" | xargs swaymsg exec --
 #set $menu wofi -diI -S drun,run | xargs swaymsg exec --
 set $menu  rofi -show combi \
-                -modes "combi,filebrowser,calc,:rofi-sound-output-chooser,keys,window" \
+                -modes "combi,filebrowser,calc,sound-output:rofi-sound-output-chooser,keys,window" \
                 -combi-modes "drun,run"
 
 #set $cm-paste cliphist list | rofi -dmenu | cliphist decode | wl-copy
@@ -53,7 +50,7 @@ output * bg "#000000" solid_color
 #output DP-1 mode 2560x1440@170Hz position 2560 0
 #output DP-2 mode 2560x1080 position 0 0
 output eDP-1 mode 2560x1600 position 0 0 scale 1.15
-output DP-2 mode 2560x1600 position 2229 0
+output DP-1 mode 2560x1440@170Hz position 2229 0
 
 set $lock_command Blurlock
 exec swayidle -w \
@@ -62,48 +59,21 @@ exec swayidle -w \
     lock "$lock_command" \
     before-sleep "$lock_command"
 
-exec dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP=sway XDG_CONFIG_HOME
-exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-exec foot -s
-exec dunst
-exec wl-paste --watch cliphist store
 exec wlsunset -l 48 -L 17 -t 3000 -T 5500
 exec solaar -w hide
+# exec dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP=sway XDG_CONFIG_HOME
+# exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+# exec foot -s
+# exec dunst
+# exec wl-paste --watch cliphist store
 #exec safeeyes
 #exec redshift-gtk
-exec copyq
+# exec copyq
 #exec clipmenud
 #exec flameshot
 #exec nm-applet
 #exec play-with-mpv
 #exec kanshi
-
-### Idle configuration
-#
-# Example configuration:
-#
-# exec swayidle -w \
-#          timeout 300 'swaylock -f -c 000000' \
-#          timeout 600 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' \
-#          before-sleep 'swaylock -f -c 000000'
-#
-# This will lock your screen after 300 seconds of inactivity, then turn off
-# your displays after another 300 seconds, and turn your screens back on when
-# resumed. It will also lock your screen before your computer goes to sleep.
-
-### Input configuration
-#
-# Example configuration:
-#
-#   input "2:14:SynPS/2_Synaptics_TouchPad" {
-#       dwt enabled
-#       tap enabled
-#       natural_scroll enabled
-#       middle_emulation enabled
-#   }
-#
-# You can get the names of your inputs by running: swaymsg -t get_inputs
-# Read `man 5 sway-input` for more information about this section.
 
 input "type:touchpad" {
     dwt enabled
@@ -121,10 +91,6 @@ input "1386:21273:Wacom_HID_5319_Pen" {
     map_to_output eDP-1
 }
 
-# input "2:10:TPPS/2_Elan_TrackPoint" {
-#     scroll_factor 0.5
-# }
-
 #input "1:1:AT_Translated_Set_2_keyboard" {
 input "type:keyboard" {
     xkb_layout us-sk_dia,sk(qwerty)
@@ -136,8 +102,6 @@ input "type:keyboard" {
 #
 # Basics:
 #
-    # Start a terminal
-    bindsym $mod+Return exec $term
     bindsym $mod+Shift+Return exec $term tmux -u new -A -D -t common_global
 
     # Kill focused window
@@ -150,71 +114,25 @@ input "type:keyboard" {
     bindsym $mod+t exec $term -e yazi
     bindsym $mod+p exec loginctl lock-session
     bindsym $mod+Shift+p exec 'Blurlock && sleep 1 && systemctl suspend'
-    bindsym $mod+Control+v exec $cm-paste
+    
+    # bindsym $mod+Control+v exec $cm-paste
 
-    bindsym Print         exec 'grim -g "$(slurp)" - | savescreenshot.sh'
-    bindsym Control+Print exec "grim - | savescreenshot.sh"
-    bindsym $mod+grave exec "grim - | savescreenshot.sh"
-
-    # Drag floating windows by holding down $mod and left mouse button.
-    # Resize them with right mouse button + $mod.
-    # Despite the name, also works for non-floating windows.
-    # Change normal to inverse to use left mouse button for resizing and right
-    # mouse button for dragging.
-    floating_modifier $mod normal
-
-    # Reload the configuration file
-    bindsym $mod+Shift+c reload
+    # bindsym Print         exec 'grim -g "$(slurp)" - | savescreenshot.sh'
+    # bindsym Control+Print exec "grim - | savescreenshot.sh"
+    # bindsym $mod+grave exec "grim - | savescreenshot.sh"
 
     # Exit sway (logs you out of your Wayland session)
-    bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -b 'Yes, exit sway' 'swaymsg exit'
+    # bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -b 'Yes, exit sway' 'swaymsg exit'
 
-    bindsym XF86MonBrightnessUp exec brightnessctl -e s +3%
-    bindsym XF86MonBrightnessDown exec brightnessctl -e s 3%-
-    bindsym XF86AudioRaiseVolume exec pamixer -i 5
-    bindsym XF86AudioLowerVolume exec pamixer -d 5
-    bindsym XF86AudioMute exec pamixer -t
     bindsym XF86AudioMicMute exec pamixer --default-source -t
     #bindsym XF86TouchpadToggle exec swaymsg input "1226:177:PXIC2642:00_04CA:00B1_Touchpad" events toggle 
 
 #
 # Moving around:
 #
-    # Move your focus around
-    bindsym $mod+$left focus left
-    bindsym $mod+$down focus down
-    bindsym $mod+$up focus up
-    bindsym $mod+$right focus right
-    # Or use $mod+[up|down|left|right]
-    bindsym $mod+Left focus left
-    bindsym $mod+Down focus down
-    bindsym $mod+Up focus up
-    bindsym $mod+Right focus right
+    # Move focus to the child container
+    bindsym $mod+Shift+a focus child
 
-    # Move the focused window with the same, but add Shift
-    bindsym $mod+Shift+$left move left
-    bindsym $mod+Shift+$down move down
-    bindsym $mod+Shift+$up move up
-    bindsym $mod+Shift+$right move right
-    # Ditto, with arrow keys
-    bindsym $mod+Shift+Left move left
-    bindsym $mod+Shift+Down move down
-    bindsym $mod+Shift+Up move up
-    bindsym $mod+Shift+Right move right
-#
-# Workspaces:
-#
-    # Switch to workspace
-    bindsym --to-code $mod+1 workspace number 1
-    bindsym --to-code $mod+2 workspace number 2
-    bindsym --to-code $mod+3 workspace number 3
-    bindsym --to-code $mod+4 workspace number 4
-    bindsym --to-code $mod+5 workspace number 5
-    bindsym --to-code $mod+6 workspace number 6
-    bindsym --to-code $mod+7 workspace number 7
-    bindsym --to-code $mod+8 workspace number 8
-    bindsym --to-code $mod+9 workspace number 9
-    bindsym --to-code $mod+0 workspace number 10
     bindsym $mod+F1 workspace number 101:F1
     bindsym $mod+F2 workspace number 102:F2
     bindsym $mod+F3 workspace number 103:F3
@@ -227,17 +145,7 @@ input "type:keyboard" {
     bindsym $mod+F10 workspace number 110:F10
     bindsym $mod+F11 workspace number 111:F11
     bindsym $mod+F12 workspace number 112:F12
-    # Move focused container to workspace
-    bindsym --to-code $mod+Shift+1 move container to workspace number 1
-    bindsym --to-code $mod+Shift+2 move container to workspace number 2
-    bindsym --to-code $mod+Shift+3 move container to workspace number 3
-    bindsym --to-code $mod+Shift+4 move container to workspace number 4
-    bindsym --to-code $mod+Shift+5 move container to workspace number 5
-    bindsym --to-code $mod+Shift+6 move container to workspace number 6
-    bindsym --to-code $mod+Shift+7 move container to workspace number 7
-    bindsym --to-code $mod+Shift+8 move container to workspace number 8
-    bindsym --to-code $mod+Shift+9 move container to workspace number 9
-    bindsym --to-code $mod+Shift+0 move container to workspace number 10
+
     bindsym $mod+Shift+F1 move container to workspace number 101:F1
     bindsym $mod+Shift+F2 move container to workspace number 102:F2
     bindsym $mod+Shift+F3 move container to workspace number 103:F3
@@ -265,40 +173,6 @@ input "type:keyboard" {
 #
 # Layout stuff:
 #
-    # You can "split" the current object of your focus with
-    # $mod+i or $mod+v, for horizontal and vertical splits
-    # respectively.
-    bindsym $mod+b splith
-    bindsym $mod+v splitv
-
-    # Switch the current container between different layout styles
-    bindsym $mod+s layout stacking
-    bindsym $mod+w layout tabbed
-    bindsym $mod+e layout toggle split
-
-    # Make the current focus fullscreen
-    bindsym $mod+f fullscreen
-
-    # Toggle the current focus between tiling and floating mode
-    bindsym $mod+Shift+space floating toggle
-
-    # Swap focus between the tiling area and the floating area
-    bindsym $mod+space focus mode_toggle
-
-    # Move focus to the parent container
-    bindsym $mod+a focus parent
-#
-# Scratchpad:
-#
-    # Sway has a "scratchpad", which is a bag of holding for windows.
-    # You can send windows there and get them back later.
-
-    # Move the currently focused window to the scratchpad
-    bindsym $mod+Shift+minus move scratchpad
-
-    # Show the next scratchpad window or hide the focused scratchpad window.
-    # If there are multiple scratchpad windows, this command cycles through them.
-    bindsym $mod+minus scratchpad show
 #
 # Resizing containers:
 #
@@ -307,16 +181,16 @@ mode "resize" {
     # right will grow the containers width
     # up will shrink the containers height
     # down will grow the containers height
-    bindsym $left  resize shrink width  50px
-    bindsym $down  resize grow   height 50px
-    bindsym $up    resize shrink height 50px
-    bindsym $right resize grow   width  50px
+    bindsym $left  resize shrink width  $resizestep
+    bindsym $down  resize grow   height $resizestep
+    bindsym $up    resize shrink height $resizestep
+    bindsym $right resize grow   width  $resizestep
 
     # Ditto, with arrow keys
-    bindsym Left  resize shrink width  50px
-    bindsym Down  resize grow   height 50px
-    bindsym Up    resize shrink height 50px
-    bindsym Right resize grow   width  50px
+    bindsym Left  resize shrink width  $resizestep
+    bindsym Down  resize grow   height $resizestep
+    bindsym Up    resize shrink height $resizestep
+    bindsym Right resize grow   width  $resizestep
 
     # Return to default mode
     bindsym Return mode "default"
@@ -329,22 +203,22 @@ font Terminus 8
 # Status Bar:
 #
 # Read `man 5 sway-bar` for more information about this section.
-bar {
-    swaybar_command waybar
-    position top
-    strip_workspace_numbers yes
+# bar {
+#     swaybar_command waybar
+#     position top
+#     strip_workspace_numbers yes
 
-    # When the status_command prints a new line to stdout, swaybar updates.
-    # The default just shows the current date and time.
-    #status_command while date +'%Y-%m-%d %l:%M:%S %p'; do sleep 1; done
-    status_command i3status-rs
+#     # When the status_command prints a new line to stdout, swaybar updates.
+#     # The default just shows the current date and time.
+#     #status_command while date +'%Y-%m-%d %l:%M:%S %p'; do sleep 1; done
+#     status_command i3status-rs
 
-    colors {
-        statusline #bbbbbb
-        background #000000
-        #inactive_workspace #32323200 #32323200 #5c5c5c
-    }
-}
+#     colors {
+#         statusline #bbbbbb
+#         background #000000
+#         #inactive_workspace #32323200 #32323200 #5c5c5c
+#     }
+# }
 
 for_window [app_id="iwgtk"] floating enable
 for_window [app_id="ripdrag"] floating enable
