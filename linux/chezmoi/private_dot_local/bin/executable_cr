@@ -1,0 +1,47 @@
+#!/bin/bash
+
+while getopts "c:f" opt; do
+    case $opt in
+        c)
+            compiler=$OPTARG
+            ;;
+        f)
+            force_recompile=true
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND -1))
+
+compiler=${compiler:-Cppcompile2}
+force_recompile=${force_recompile:-false}
+
+if [ -z "$1" ]; then
+    echo "Usage: cr [-c compiler] [-f] file.cpp"
+    exit 1
+fi
+
+if [ $# -gt 1 ]; then
+    echo "Usage: cr [-c compiler] [-f] file.cpp"
+    exit 1
+fi
+
+if [ $compiler == "Cppcompile2" ]; then
+    exe=$1.bin
+    if [ $force_recompile == true ]; then
+        rm -f $exe
+    fi
+    Cppcompile2 0 $1 && Time ./$exe
+elif [ $compiler == "make" ]; then
+    exe=${1%.*}
+    if [ $force_recompile == true ]; then
+        rm -f $exe
+    fi
+    make $exe && printf "compiled\n----------\n" && Time ./$exe
+else
+    echo "Invalid compiler: $compiler"
+    exit 1
+fi
