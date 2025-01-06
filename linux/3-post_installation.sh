@@ -1,8 +1,10 @@
 #!/bin/bash
 
 #CONFIG=/home/fezjo/src/configuration/linux/
-CONFIG=.
+CONFIG=$(pwd)
 
+echo "Apply chezmoi from '$CONFIG/chezmoi' to '$HOME' ?"
+read -p "Press enter to continue"
 chezmoi apply -S $CONFIG/chezmoi
 
 chsh
@@ -51,6 +53,9 @@ sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 # Time
 sudo systemctl enable --now systemd-timesyncd
 
+# OOM
+sudo systemctl enable --now systemd-oomd
+
 # Docker
 sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
@@ -85,4 +90,6 @@ modify /etc/makepkg.conf
 modify /etc/security/faillock.conf
 modify /etc/systemd/logind.conf.d/powerbutton.conf
 add things to /etc/dracut.conf.d/
+
+setup timeshift
 EOF

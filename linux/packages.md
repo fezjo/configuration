@@ -15,6 +15,7 @@
 
 # Daemons & Services
 + systemd-resolvconf
+- bustd           # oom
 
 # Boot & System Configuration
 + dracut
@@ -23,6 +24,11 @@
 + etckeeper
 + xdg-ninja
 + antidot-bin
+
+# Disk
++ btrfs-desktop-notification
++ timeshift
++ timeshift-autosnap
 
 # Desktop Environments & Window Managers
 ## Budgie/GNOME Components
@@ -115,7 +121,6 @@
 + atuin           # history
 + bat             # cat
 + bottom          # htop
-+ bustd           # oom
 + choose          # cut
 + dust            # du
 + eza             # ls
@@ -209,8 +214,8 @@
 ### Python
 + python
 + python-pipx
-+ pypy3
 + python-scipy
++ pypy3
 
 ## Programming Tools
 + valgrind
@@ -228,7 +233,7 @@
 + evince
 + typst
 + tectonic
-+ pandoc
++ pandoc-bin
 + texlive
 + texlive-langczechslovak
 + aspell-sk
