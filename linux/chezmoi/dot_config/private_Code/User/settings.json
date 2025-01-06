@@ -8,11 +8,14 @@
     "editor.autoClosingQuotes": "never",
     "editor.fontFamily": "'HackNerd', 'Droid Sans Mono', 'monospace', monospace",
     "editor.rulers": [80, 100],
+    "extensions.ignoreRecommendations": true,
     "files.associations": {
         "idf": "r"
     },
+    "gitlens.telemetry.enabled": false,
     "notebook.output.scrolling": true,
     "security.workspace.trust.enabled": false,
+    "telemetry.telemetryLevel": "off",
     "terminal.integrated.enableMultiLinePasteWarning": "never",
     "terminal.integrated.persistentSessionScrollback": 1000,
     "terminal.integrated.scrollback": 100000,

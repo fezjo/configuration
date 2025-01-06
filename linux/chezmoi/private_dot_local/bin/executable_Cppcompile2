@@ -1,22 +1,28 @@
 #!/bin/bash
 
+function colorecho() {
+    color_code=$1
+    shift
+    echo -e "\033[${color_code}m$@\033[0m"
+}
+
 function grayecho() {
-    echo -e "\033[30m$@\033[0m"
+    colorecho 30 "$@"
 }
 function redecho() {
-    echo -e "\033[31m$@\033[0m"
+    colorecho 31 "$@"
 }
 function greenecho() {
-    echo -e "\033[32m$@\033[0m"
+    colorecho 32 "$@"
 }
 function yellowecho() {
-    echo -e "\033[33m$@\033[0m"
+    colorecho 33 "$@"
 }
 function blueecho() {
-    echo -e "\033[34m$@\033[0m"
+    colorecho 34 "$@"
 }
 function purpleecho() {
-    echo -e "\033[35m$@\033[0m"
+    colorecho 35 "$@"
 }
 
 function precompile() {
@@ -83,7 +89,7 @@ function precompile() {
 
 mask_i=$1
 inp=$2
-#outp=$3
+outp=${inp%.*}.bin
 shift;shift;
 
 basic="-std=c++20 -O2 -g -Wall -Wextra -pedantic"
@@ -114,11 +120,8 @@ mask=${masks[$mask_i]}
 greenecho $mask
 parameters=""
 
-for i in `seq 0 $((${#groups[@]} - 1))`
-do
-    if [ $(( $mask & $((1<<$i)) )) != 0 ]; then
-        parameters="$parameters ${groups[$i]}"
-    fi
+for i in "${!groups[@]}"; do
+    (( mask & (1 << i) )) && parameters+=" ${groups[$i]}"
 done
 grayecho $parameters
 precompile $parameters

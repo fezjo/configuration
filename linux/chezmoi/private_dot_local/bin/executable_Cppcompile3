@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+import os
+import sys
+import hashlib
+import subprocess
+from pathlib import Path
+
+
+# ANSI color codes
+class Colors:
+    GRAY = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    PURPLE = "\033[35m"
+    RESET = "\033[0m"
+
+
+def colorecho(color: str, *args: str, file=sys.stderr) -> None:
+    """Print text in specified color."""
+    print(f"{color}{' '.join(map(str, args))}{Colors.RESET}", file=file)
+
+def echo(*args: str) -> None: colorecho(Colors.RESET, *args)
+def grayecho(*args: str) -> None: colorecho(Colors.GRAY, *args)
+def redecho(*args: str) -> None: colorecho(Colors.RED, *args)
+def greenecho(*args: str) -> None: colorecho(Colors.GREEN, *args)
+def yellowecho(*args: str) -> None: colorecho(Colors.YELLOW, *args)
+def blueecho(*args: str) -> None: colorecho(Colors.BLUE, *args)
+def purpleecho(*args: str) -> None: colorecho(Colors.PURPLE, *args)
+
+
+def find_newest_header(pattern: str) -> str | None:
+    """Find the newest header file matching the pattern."""
+    paths = list(Path("/usr/include/c++").glob(f"*/*/*/bits/{pattern}"))
+    return str(sorted(paths)[-1]) if paths else None
+
+
+def precompile_header(header_name: str, parameters: str, precomp_dir: Path) -> bool:
+    """Precompile a single header and return status."""
+    header_path = find_newest_header(header_name)
+    if not header_path:
+        redecho(f"{header_name} not found")
+        return False
+
+    local_header = precomp_dir / header_name
+    local_header_gch = precomp_dir / f"{header_name}.gch"
+
+    if not local_header.exists():
+        blueecho(f"Copying {header_name}")
+        local_header.write_bytes(Path(header_path).read_bytes())
+
+    if not local_header_gch.exists():
+        blueecho(f"Precompiling {header_name}")
+        result = subprocess.run(
+            ["g++", "-x", "c++-header", str(local_header), "-o", str(local_header_gch)]
+            + parameters.split()
+        )
+        if result.returncode != 0:
+            redecho(f"Failed to precompile {header_name}")
+            return False
+
+    return True
+
+
+def precompile(parameters: str) -> tuple[bool, str]:
+    """Precompile headers and return status and updated parameters.
+    - we will precompile stdc++.h and extc++.h to speed up compilation
+    - we will hash the flags to determine if we need to recompile them
+    - we cache these precompiled headers in .local/include/c++-hash
+    - with the help of -I flag we can include them in our code
+    """
+    hash_value = hashlib.md5(parameters.encode()).hexdigest()
+    precomp_dir = Path.home() / ".local/include" / f"c++-{hash_value}"
+    precomp_dir.mkdir(parents=True, exist_ok=True)
+
+    headers = ["stdc++.h", "extc++.h"]
+    for header in headers:
+        if not precompile_header(header, parameters, precomp_dir):
+            return False, parameters
+
+    greenecho(f"Precompiled headers are in {precomp_dir}")
+    return True, f"{parameters} " + " ".join(
+        f"-include {precomp_dir / header}" for header in headers
+    )
+
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: Cppcompile3 mask input_file [-f] [-o output_file] [additional g++ args]")
+        print("mask: 0=warnings, 1=fortify, 2=sanitize, 0b???????=any")
+        sys.exit(1)
+
+    args = sys.argv[1:]
+    argmask = args[0]
+    inp = args[1]
+    outp = f"{os.path.splitext(inp)[0]}.bin"
+    recompile = False
+    if "-f" in args:
+        recompile = True
+        args.remove("-f")
+    if "-o" in args:
+        inx = args.index("-o")
+        assert inx + 1 < len(args), "Output file not specified"
+        outp = args[inx + 1]
+        args = args[:inx] + args[inx + 2 :]
+    input_rest = " ".join(args[2:])
+
+    # Define compilation flag groups
+    groups = [
+        "-fsanitize=address -fsanitize=undefined",
+        "-fno-sanitize-recover=all -fstack-protector",
+        "-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2",
+        "-DLOCAL -Wfatal-errors -DDBG_MACRO_NO_WARNING",
+        "-Wshadow -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -Wcast-qual -Wcast-align",
+        "-std=c++20 -O2 -g -Wall -Wextra -pedantic",
+        input_rest,
+    ]
+
+    masks = [0b1111000, 0b1111110, 0b1111111]
+    mask = int(argmask, 2) if argmask.startswith("0b") else masks[int(argmask)]
+    greenecho("0b" + bin(mask)[2:].zfill(len(groups)))
+
+    # Build parameters string based on mask
+    parameters = " ".join(flag for i, flag in enumerate(groups) if mask & (1 << i))
+    grayecho(parameters)
+
+    # Precompile headers
+    _success, parameters = precompile(parameters)
+    grayecho(parameters)
+
+    # Check if binary is up to date
+    bin_path = Path(outp)
+    if not recompile and bin_path.exists() and bin_path.stat().st_mtime > Path(inp).stat().st_mtime:
+        purpleecho("BIN UP TO DATE")
+    else:
+        # Compile
+        result = subprocess.run(["Time", "g++", inp, "-o", outp] + parameters.split())
+        if result.returncode != 0:
+            redecho("ERROR".center(30, "-"))
+            sys.exit(result.returncode)
+
+    echo("COMPILED".center(30, "-"))
+
+if __name__ == "__main__":
+    main()
