@@ -79,7 +79,8 @@ alias du='du -h --apparent-size'
 alias egrep='egrep --colour=auto'
 alias dyff="diff -W $COLUMNS --color=always --suppress-common-lines -y"
 alias grep='echo "use `rg`" && sleep 3 && /usr/bin/grep --color=auto'
-alias cut='echo "use `choose`" && sleep 3 && /usr/bin/cut'
+# fish is using cut
+# alias cut='echo "use `choose`" && sleep 3 && /usr/bin/cut'
 
 alias cloc=tokei
 alias hx=helix

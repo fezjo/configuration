@@ -172,6 +172,7 @@
 
 ## Audio/Video
 + mpv
++ vlc
 + syncplay
 + yt-dlp
 - play-with-mpv
@@ -219,7 +220,7 @@
 
 ## Programming Tools
 + valgrind
-+ rye # rust
+- rye # rust
 + uv # rust
 + ruff # rust
 + mise # rust

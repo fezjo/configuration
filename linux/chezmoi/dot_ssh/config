@@ -1,6 +1,10 @@
 IdentityFile ~/.ssh/ssh_fezjo
 IdentityFile ~/.ssh/id_ed25519_vl
 
+Host koniky.xyz
+    HostName koniky.xyz
+    User fezjo
+
 Host knut
     HostName knut
     User fezjo
@@ -36,9 +40,9 @@ Host experiment
     Port 5422
 
 Host snail
-    Hostname snellius.surf.nl
+    HostName snellius.surf.nl
     User scur1738
 
 Host snail-viki
-    Hostname snellius.surf.nl
+    HostName snellius.surf.nl
     User scur2768

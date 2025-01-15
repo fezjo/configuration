@@ -1,1 +1,5 @@
 sourceDir = "/home/fezjo/src/configuration/linux/chezmoi/"
+
+[diff]
+#command = "delta"
+pager = "delta"
