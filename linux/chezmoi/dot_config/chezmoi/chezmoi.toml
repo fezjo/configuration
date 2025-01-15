@@ -6,3 +6,7 @@ encryption = "age"
 identity = "~/.ssh/ssh_fezjo"
 recipient = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILy9dxV/x+lbn+KOeQGQLgmqlTTUvPQ6Vo0Bfzo2jKze jozef.ciz.ml@gmail.com"
 
+
+[diff]
+#command = "delta"
+pager = "delta"

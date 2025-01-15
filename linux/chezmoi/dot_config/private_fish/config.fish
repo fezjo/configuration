@@ -11,6 +11,10 @@ end
 bass source $HOME/.profile
 source $HOME/.config/shell-config.fish
 
+bind \cw backward-kill-word
+bind \b backward-kill-word
+bind \e\[3\;5~ kill-word
+
 set -gx EDITOR helix
 
 sh /home/fezjo/src/justthetip/tipper.sh
