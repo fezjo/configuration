@@ -1,0 +1,2 @@
+#!/bin/bash
+distrobox enter $1 -e sh -c "fastfetch && fish"
