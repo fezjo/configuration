@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export ENV_PROFILES="$ENV_PROFILES:.profile/start"
+export ENV_PROFILES="$ENV_PROFILES\n($(date))>by $1>.profile>start"
 
 # # Set desktop and session type
 # XDG_SESSION_TYPE = "wayland"
@@ -82,17 +82,30 @@ alias grep='echo "use `rg`" && sleep 3 && /usr/bin/grep --color=auto'
 # fish is using cut
 # alias cut='echo "use `choose`" && sleep 3 && /usr/bin/cut'
 
+alias cf=cf-tool
 alias cloc=tokei
 alias hx=helix
+alias man=batman
 alias py=pypy3
-alias cf=cf-tool
 alias xo=xdg-open
+
+if ! command -v helix >/dev/null 2>&1; then
+  for cmd in "/usr/bin/helix" "/usr/bin/hx"; do
+    if command -v "$cmd" >/dev/null 2>&1; then
+      alias helix="$cmd"
+      break
+    fi
+  done
+fi
 
 alias cpr='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1'
 alias mvr='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files'
+alias scpr='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --compress'
+
+alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
 
 alias ubuntu='distrobox enter ubuntu -e sh -c "fastfetch && zsh"'
 alias arch-test='distrobox enter arch-test -e sh -c "fastfetch && fish"'
 alias djvu2pdf='docker run --rm -u $(id -u):$(id -g) -v $(pwd):/opt/work ilyabystrov/djvu2pdf'
 
-export ENV_PROFILES="$ENV_PROFILES:.profile/end"
+export ENV_PROFILES="$ENV_PROFILES\n($(date))>by $1>.profile>end"

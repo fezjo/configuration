@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Usage: make_distrobox <boxname> [distro]
+# boxname: name of the distrobox
+# distro: distro name, default is archlinux
+
+boxname=$1
+distro=${2:-archlinux}
+
+if [ -z $boxname ]; then
+  echo "Usage: make_distrobox <boxname> [distro]"
+  exit 1
+fi
+
+if [ $distro = "archlinux" ]; then
+  repo=yay-bin
+  setup="
+  sudo pacman -S --needed --noconfirm git base-devel &&
+  ([ -d $repo ] &&
+    (cd $repo && pwd && git pull) ||
+    git clone https://aur.archlinux.org/yay-bin.git $repo
+  ) &&
+  cd $repo &&
+  makepkg -si --noconfirm &&
+  yay -S --noconfirm fastfetch &&
+  echo success
+  "
+else
+  setup=""
+fi
+
+cd ~
+
+if [ -d distrobox/$boxname ]; then
+  echo "distrobox $boxname already exists"
+  exit 1
+fi
+
+mkdir -p distrobox
+distrobox create --name $boxname --image $distro:latest --home /home/fezjo/distrobox/$boxname-home/ --yes
+cd distrobox
+distrobox enter $boxname -- sh -c "$setup";
+

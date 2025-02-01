@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=SSH URL Handler
+Comment=Login to SSH URLs in terminal
+Exec=bash -c "notify-send $TERM %u"
+Terminal=true
+Type=Application
+Categories=System;TerminalEmulator;
+Icon=utilities-terminal
+MimeType=x-scheme-handler/ssh;
