@@ -18,6 +18,4 @@ bind \cw backward-kill-word
 bind \b backward-kill-word
 bind \e\[3\;5~ kill-word
 
-set -gx EDITOR helix
-
 # /home/fezjo/src/justthetip/tipper.sh
