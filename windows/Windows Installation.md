@@ -1,3 +1,10 @@
+## CTT winutil
+
+- https://github.com/ChrisTitusTech/winutil
+```ps
+irm "https://christitus.com/win" | iex
+```
+
 Activate windows
 
 # Settings

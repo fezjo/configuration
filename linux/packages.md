@@ -12,10 +12,12 @@
 + gnome-keyring
 + polkit-gnome
 + xdg-desktop-portal
++ xdg-desktop-portal-gtk
 
 # Daemons & Services
 + systemd-resolvconf
 - bustd           # oom
++ batify
 
 # Boot & System Configuration
 + dracut
@@ -120,6 +122,7 @@
 ## Terminal Tools (Rust)
 + atuin           # history
 + bat             # cat
++ bat-extras      # man
 + bottom          # htop
 + choose          # cut
 + dust            # du
@@ -140,6 +143,9 @@
 + fzf # go
 + glow # go
 + htop
++ lazydocker
++ lazygit
+- lazynpm
 - magic-wormhole
 + nvtop
 - ov # go
@@ -148,6 +154,7 @@
 + thefuck
 + time
 - tldr++ # go, interactive tldr
++ up
 + unrar
 + unzip
 - wormhole-william # go
@@ -198,11 +205,11 @@
 + mousepad
 + neovim
 + visual-studio-code-bin
++ visidata
 + zed # rust
 
 ## Version Control
 + git
-+ lazygit # go
 + git-delta # rust
 + meld
 + gitbutler-bin
@@ -214,6 +221,7 @@
 
 ### Python
 + python
++ python-odfpy
 + python-pipx
 + python-scipy
 + pypy3
@@ -229,6 +237,7 @@
 + testlib
 + dbg-macro
 + docker
++ docker-compose
 
 ## Documentation & Publishing
 + evince

@@ -1,8 +1,9 @@
 include $HOME/.config/sway/config.d/*
 
 unbindsym $mod+d
-unbindsym $mod+f1
 unbindsym $mod+p
+unbindsym $mod+q
+unbindsym $mod+f1
 bindsym $mod+tab exec ~/.config/sway/scripts/window_switcher.sh
 
 set $resizestep 50px

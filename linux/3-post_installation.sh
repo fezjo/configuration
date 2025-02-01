@@ -13,6 +13,10 @@ fuck
 fuck
 
 mise use -g usage
+mise use -g node
+
+# Default applications
+xdg-mime default ssh.desktop x-scheme-handler/ssh
 
 # ZSwap
 sudo btrfs subvolume create /swap
@@ -42,6 +46,8 @@ localectl
 pipx ensurepath
 pypy3 -m ensurepip
 pypy3 -m pip install matplotlib
+pipx install input-tool shell-gpt xxh-xxh
+# good tools: pre-commit pur vermin
 
 # SSH
 sudo systemctl enable --now sshd

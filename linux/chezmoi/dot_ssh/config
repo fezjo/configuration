@@ -1,13 +1,28 @@
 IdentityFile ~/.ssh/ssh_fezjo
 IdentityFile ~/.ssh/id_ed25519_vl
 
-Host koniky.xyz
-    HostName koniky.xyz
-    User fezjo
+# My computers
 
 Host knut
     HostName knut
     User fezjo
+
+Host knut-local
+    HostName 192.168.1.200
+    User fezjo
+
+# Sammko's computers
+
+Host szelepcsenyi_old
+    HostName sammserver.com
+    User fezjo
+    Port 11001
+
+Host koniky.xyz
+    HostName koniky.xyz
+    User fezjo
+
+# Trojsten
 
 Host ksp.sk
     HostkeyAlgorithms +ssh-rsa
@@ -17,6 +32,13 @@ Host element.ksp.sk
     HostkeyAlgorithms +ssh-rsa
     PubkeyAcceptedAlgorithms +ssh-rsa
 
+Host experiment
+    HostName testament.3sten.sk
+    User jozef.ciz
+    Port 5422
+
+# Matfyz
+
 Host matfyz-davinci
     HostName davinci.fmph.uniba.sk
     User ciz5
@@ -25,24 +47,25 @@ Host matfyz-mad
     HostName vyuka.compbio.fmph.uniba.sk
     User ciz5
 
-Host szelepcsenyi_old
-    HostName sammserver.com
-    User fezjo
-    Port 11001
+# UVA
 
-Host knut-local
-    HostName 192.168.1.200
-    User fezjo
-
-Host experiment
-    HostName testament.3sten.sk
-    User jozef.ciz
-    Port 5422
-
-Host snail
+Host snail-dl4nlp
     HostName snellius.surf.nl
     User scur1738
 
 Host snail-viki
     HostName snellius.surf.nl
     User scur2768
+
+Host snail-hpc-gpu
+    HostName snellius.surf.nl
+    User scur1233
+    SetEnv TERM=xterm-color
+
+Host snail-hpc-das5
+    HostName snellius.surf.nl
+    User scur1278
+    SetEnv TERM=xterm-color
+
+# Unsorted
+
