@@ -14,7 +14,7 @@ export ENV_PROFILES="$ENV_PROFILES\n($(date))>by $1>.profile>start"
 # QT_QPA_PLATFORM = "wayland"
 
 export BROWSER=floorp
-export EDITOR=helix
+export EDITOR=hx
 export TERM=foot
 export TERMINAL=foot
 
