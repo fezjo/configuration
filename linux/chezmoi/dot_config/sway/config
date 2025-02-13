@@ -126,7 +126,7 @@ input "type:keyboard" {
     # bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -b 'Yes, exit sway' 'swaymsg exit'
 
     bindsym XF86AudioMicMute exec pamixer --default-source -t
-    #bindsym XF86TouchpadToggle exec swaymsg input "1226:177:PXIC2642:00_04CA:00B1_Touchpad" events toggle 
+    bindsym XF86TouchpadToggle exec swaymsg input "1226:177:PXIC2642:00_04CA:00B1_Touchpad" events toggle 
 
 #
 # Moving around:
@@ -226,5 +226,9 @@ for_window [app_id="ripdrag"] floating enable
 # for_window [app_id="safeeyes"] floating enable; fullscreen disable;
 for_window [title="^Extension: \(Bitwarden - Free Password Manager\) - Bitwarden — "] floating enable
 for_window [title="— Sharing Indicator"] kill
+
+
+# class                 border  bground text    indicator child_border
+client.focused          #6272A4 #6272A4 #F8F8F2 #40A0D0   #6272A4
 
 include /etc/sway/config.d/*

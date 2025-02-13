@@ -49,6 +49,12 @@ pypy3 -m pip install matplotlib
 pipx install input-tool shell-gpt xxh-xxh
 # good tools: pre-commit pur vermin
 
+# Cron
+sudo systemctl enable --now cronie
+
+# Battery
+systemctl enable --now --user batsignal
+
 # SSH
 sudo systemctl enable --now sshd
 
