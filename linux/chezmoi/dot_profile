@@ -55,7 +55,8 @@ export TEXMFVAR="${XDG_CACHE_HOME}/texlive/texmf-var"
 export XCURSOR_PATH=/usr/share/icons:$XDG_DATA_HOME/icons
 export WINEPREFIX="${XDG_DATA_HOME}/wine"
 
-PATH="/home/fezjo/.local/bin:$PATH"
+export PATH="$PATH:$CARGO_HOME/bin/"
+export PATH="/home/fezjo/.local/bin:$PATH"
 
 alias cp='cp -iv'
 alias mv='mv -iv'

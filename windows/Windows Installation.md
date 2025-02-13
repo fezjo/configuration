@@ -5,7 +5,12 @@
 irm "https://christitus.com/win" | iex
 ```
 
-Activate windows
+## Window manager
+- Komorebi (Sway)
+- GlazeWM (i3)
+- SeelenUI (Hyprland)
+
+# Activate windows
 
 # Settings
 
