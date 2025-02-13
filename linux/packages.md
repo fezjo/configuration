@@ -17,11 +17,12 @@
 # Daemons & Services
 + systemd-resolvconf
 - bustd           # oom
-+ batify
++ batsignal
 
 # Boot & System Configuration
 + dracut
 + efibootmgr
++ gnome-firmware
 + chezmoi
 + etckeeper
 + xdg-ninja
@@ -107,6 +108,7 @@
 + zsh
 + fish
 + xonsh
+- xxh # copy shell over ssh
 + oh-my-zsh-git
 + zsh-theme-powerlevel10k
 
@@ -195,9 +197,14 @@
 + geary
 + thunderbird
 + telegram-desktop
-+ slack
++ slack-desktop
 
 # Development Tools
+
+## AI
++ shellgpt-git
++ ollama
+
 ## Text Editors & IDEs
 + helix # rust
 + libreoffice
@@ -213,6 +220,7 @@
 + git-delta # rust
 + meld
 + gitbutler-bin
++ bliss # gitignore
 
 ## Programming Languages
 + rustup
@@ -272,3 +280,11 @@
 + ttf-firacode-nerd
 + noto-fonts-emoji
 - ttf-ms-win11-auto
+
+## Check out later
+- rustdesk # teamviewer
+- rnote # xournal++
+- waydroid # android on linux
+- cassowary # windows apps on linux
+- wild # linker
+ 
