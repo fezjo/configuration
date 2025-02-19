@@ -1,0 +1,41 @@
+#
+# ~/.zshrc
+#
+
+# If not running interactively, don't do anything
+[[ -z "$PS1" ]] && return
+
+# Aliases
+alias ls='ls --color=auto'
+alias ll='ls -lah --color=auto'
+alias grep='grep --color=auto'
+
+# Enable word-by-word deletion with Ctrl+Backspace and Ctrl+Delete
+bindkey '^H' backward-kill-word
+bindkey '^[3;5~' kill-word
+
+# Source ~/.profile if it exists (same as in bashrc)
+[[ -f ~/.profile ]] && source ~/.profile
+
+# Git branch function for prompt, with parentheses
+parse_git_branch() {
+    local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    if [[ -n "$branch" ]]; then
+        echo "($branch)"
+    fi
+}
+
+# Custom prompt with git branch in parentheses
+autoload -U colors && colors
+setopt prompt_subst
+
+# Git branch function within prompt
+export PS1="%F{green}%n@%m%f:%F{blue}%~%f%F{yellow}\$(parse_git_branch)%f\$ "
+
+# Command history settings
+HISTSIZE=10000
+SAVEHIST=20000
+HISTCONTROL=ignoreboth
+setopt append_history
+
+exec fish

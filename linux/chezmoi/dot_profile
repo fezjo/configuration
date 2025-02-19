@@ -13,13 +13,21 @@ export ENV_PROFILES="$ENV_PROFILES\n($(date))>by $1>.profile>start"
 # GDK_BACKEND = "wayland"
 # QT_QPA_PLATFORM = "wayland"
 
-export BROWSER=floorp
+export BROWSER=zen-browser
 export EDITOR=hx
-export TERM=foot
-export TERMINAL=foot
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  export TERM=foot
+  export TERMINAL=foot
+  cores=$(nproc)
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  export TERM=xterm-kitty
+  export TERMINAL=kitty
+  cores=$(sysctl -n hw.ncpu)
+fi
 
 export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
-export MAKEFLAGS="$MAKEFLAGS -j$(expr $(nproc) \+ 1)"
+export MAKEFLAGS="$MAKEFLAGS -j$(expr $cores \+ 1)"
 export CXXFLAGS="-std=c++20 -O2 -g -Wall -Wextra -pedantic -Wshadow=local -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -Wcast-qual -Wcast-align -DLOCAL -Wfatal-errors -DDBG_MACRO_NO_WARNING"
 
 export XDG_DATA_HOME="${XDG_DATA_HOME:=$HOME/.local/share}"
@@ -56,7 +64,12 @@ export XCURSOR_PATH=/usr/share/icons:$XDG_DATA_HOME/icons
 export WINEPREFIX="${XDG_DATA_HOME}/wine"
 
 export PATH="$PATH:$CARGO_HOME/bin/"
-export PATH="/home/fezjo/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  export TERMINFO_DIRS="$TERMINFO_DIRS:/Applications/kitty.app/Contents/Resources/kitty/terminfo"
+  export PATH="$PATH:/$HOME/.local/share/rustup/toolchains/stable-aarch64-apple-darwin/bin/"
+fi
 
 alias cp='cp -iv'
 alias mv='mv -iv'
@@ -85,7 +98,6 @@ alias grep='echo "use `rg`" && sleep 3 && /usr/bin/grep --color=auto'
 
 alias cf=cf-tool
 alias cloc=tokei
-alias hx=helix
 alias man=batman
 alias py=pypy3
 alias xo=xdg-open

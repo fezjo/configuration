@@ -1,4 +1,4 @@
-sourceDir = "/home/fezjo/src/configuration/linux/chezmoi/"
+sourceDir = "~/src/configuration/linux/chezmoi/"
 
 [diff]
 #command = "delta"
