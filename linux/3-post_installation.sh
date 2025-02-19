@@ -3,6 +3,7 @@
 #CONFIG=/home/fezjo/src/configuration/linux/
 CONFIG=$(pwd)
 
+chezmoi apply -nv -S $CONFIG/chezmoi
 echo "Apply chezmoi from '$CONFIG/chezmoi' to '$HOME' ?"
 read -p "Press enter to continue"
 chezmoi apply -S $CONFIG/chezmoi
@@ -91,6 +92,16 @@ mkdir -p distrobox &&
 cd distrobox &&
 distrobox enter $boxname -- sh -c "$setup";
 )
+
+# My projects
+mkdir ~/src
+(
+  cd ~/src
+  git clone https://github.com/fezjo/basrs.git
+  cd basrs
+  cargo install --path .
+)
+
 
 cat <<EOF
 check that pacman-mirrors are ok
