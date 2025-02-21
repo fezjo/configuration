@@ -1,0 +1,54 @@
+{
+	"name": "Vimium C",
+	"@time": "20/2/2025, 21:57:29",
+	"time": 1740085049946,
+	"environment": {
+		"extension": "1.99.997",
+		"platform": "linux",
+		"firefox": 135
+	},
+	"exclusionRules": [
+		{
+			"passKeys": "",
+			"pattern": ":https://mail.google.com/"
+		},
+		{
+			"passKeys": "f ",
+			"pattern": ":https://www.youtube.com/"
+		},
+		{
+			"passKeys": "",
+			"pattern": ":https://monkeytype.com/"
+		},
+		{
+			"passKeys": "",
+			"pattern": ":https://tomgroenwoldt.github.io/"
+		},
+		{
+			"passKeys": "",
+			"pattern": ":https://mail.proton.me/"
+		},
+		{
+			"passKeys": "",
+			"pattern": ":https://www.overleaf.com/"
+		},
+		{
+			"passKeys": "",
+			"pattern": ":https://codeforces.com/usertalk"
+		},
+		{
+			"passKeys": "",
+			"pattern": ":https://generals.io/"
+		}
+	],
+	"keyLayout": 2,
+	"keyMappings": [
+		"#!no-check",
+		"unmap <f1>",
+		"unmap <a-c>",
+		"map J nextTab",
+		"map K previousTab",
+		""
+	],
+	"vimSync": true
+}
