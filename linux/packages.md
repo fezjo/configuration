@@ -146,7 +146,6 @@
 + glow # go
 + htop
 + lazydocker
-+ lazygit
 - lazynpm
 - magic-wormhole
 + nvtop
@@ -216,11 +215,13 @@
 + zed # rust
 
 ## Version Control
-+ git
-+ git-delta # rust
-+ meld
-+ gitbutler-bin
 + bliss # gitignore
++ difftastic
++ git
++ gitbutler-bin
++ git-delta # rust
++ lazygit
++ meld
 
 ## Programming Languages
 + rustup
