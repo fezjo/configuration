@@ -1,5 +1,18 @@
-sourceDir = "~/src/configuration/linux/chezmoi/"
+sourceDir = "/home/fezjo/src/configuration/linux/chezmoi/"
+
+# [diff]
+# #command = "delta"
+# pager = "delta"
+
+# [diff]
+# command = "code"
+# args = ["--wait", "--diff"]
 
 [diff]
-#command = "delta"
-pager = "delta"
+command = "difft"
+args = [
+  "--color",
+  "always",
+  "--skip-unchanged",
+]
+pager = "bat"
