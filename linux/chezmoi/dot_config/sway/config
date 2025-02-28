@@ -224,7 +224,7 @@ font Terminus 8
 for_window [app_id="iwgtk"] floating enable
 for_window [app_id="ripdrag"] floating enable
 # for_window [app_id="safeeyes"] floating enable; fullscreen disable;
-for_window [title="^Extension: \(Bitwarden - Free Password Manager\) - Bitwarden — "] floating enable
+for_window [title="^Extension:.*Bitwarden"] floating enable
 for_window [title="— Sharing Indicator"] kill
 
 
