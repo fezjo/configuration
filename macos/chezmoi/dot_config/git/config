@@ -1,0 +1,52 @@
+[user]
+	name = Jozef Číž
+	email = jozef.ciz.ml@gmail.com
+	signingkey = jozef.ciz.ml@gmail.com
+[branch]
+    sort = -committerdate
+[column]
+    ui = auto
+[commit]
+	gpgsign = true
+[cola]
+	spellcheck = false
+[core]
+	excludesFile = /home/fezjo/.config/git/gitignore
+	pager = delta
+    untrackedCache = true
+[credential "https://github.com"]
+	helper = !/usr/bin/gh auth git-credential
+[delta]
+	navigate = true
+[diff]
+    algorithm = histogram
+    colorMoved = plain
+    mnemonicPrefix = true
+    renames = true
+[fetch]
+    prune = true
+    pruneTags = true
+    all = true
+[gpg]
+	program = /opt/homebrew/bin/gpg
+[help]
+    autocorrect = prompt
+[interactive]
+	diffFilter = delta --color-only
+[merge]
+	conflictStyle = zdiff3
+[pull]
+    rebase = true
+[push]
+    autoSetupRemote = true
+    default = simple
+    followTags = true
+[rebase]
+    autoSquash = true
+    autoStash = true
+    updateRefs = true
+[rerere]
+    autoupdate = true
+	enabled = true
+[tag]
+    sort = version:refname

@@ -37,6 +37,15 @@ Host experiment
     User jozef.ciz
     Port 5422
 
+Host testovac-algo
+    HostName algo.sk
+    User testovac
+
+Host testovac-testament
+    HostName testament.3sten.sk
+    User testovac
+    Port 5422
+
 # Matfyz
 
 Host matfyz-davinci
