@@ -1,37 +1,5 @@
 # sed 's/#.*//; s/^\s*//; /^-/d; /^\s*$/d; s/^+ //' packages.md | yay -S --needed -
 
-# System Core & Base
-+ base
-+ base-devel
-+ linux-lts
-+ linux-tools
-+ mold
-+ man
-+ man-pages
-+ polkit
-+ gnome-keyring
-+ polkit-gnome
-+ xdg-desktop-portal
-+ xdg-desktop-portal-gtk
-
-# Daemons & Services
-+ systemd-resolvconf
-- bustd           # oom
-+ batsignal
-
-# Boot & System Configuration
-+ dracut
-+ efibootmgr
-+ gnome-firmware
-+ chezmoi
-+ etckeeper
-+ xdg-ninja
-+ antidot-bin
-
-# Disk
-+ btrfs-desktop-notification
-+ timeshift
-+ timeshift-autosnap
 
 # Desktop Environments & Window Managers
 ## Budgie/GNOME Components
@@ -81,6 +49,39 @@
 + wl-clipboard
 + kanshi
 + wlsunset
+
+# System Core & Base
++ base
++ base-devel
++ linux-lts
++ linux-tools
++ mold
++ man
++ man-pages
++ polkit
++ gnome-keyring
++ polkit-gnome
++ xdg-desktop-portal
++ xdg-desktop-portal-gtk
+
+# Daemons & Services
++ systemd-resolvconf
+- bustd           # oom
++ batsignal
+
+# Boot & System Configuration
++ dracut
++ efibootmgr
++ gnome-firmware
++ chezmoi
++ etckeeper
++ xdg-ninja
++ antidot-bin
+
+# Disk
++ btrfs-desktop-notification
++ timeshift
++ timeshift-autosnap
 
 # Network & Connectivity
 + blueman
@@ -163,9 +164,10 @@
 
 # Browsers & Internet
 + zen-browser-bin
-+ floorp
-+ firefox
-+ chromium
+- floorp
+- firefox
+- brave
+- chromium
 + qbittorrent
 
 # Media & Graphics
@@ -185,8 +187,8 @@
 + yt-dlp
 - play-with-mpv
 + pamixer
-+ mpd
-+ ncmpcpp
+- mpd
+- ncmpcpp
 + audacity
 + kooha
 + cheese
@@ -237,12 +239,11 @@
 
 ## Programming Tools
 + valgrind
-- rye # rust
 + uv # rust
 + ruff # rust
 + mise # rust
 + hyperfine # rust
-+ cf-tool
+- cf-tool
 + testlib
 + dbg-macro
 + docker
@@ -288,4 +289,4 @@
 - waydroid # android on linux
 - cassowary # windows apps on linux
 - wild # linker
- 
+- sd # ianthehenry

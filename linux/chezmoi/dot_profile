@@ -20,10 +20,17 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   export TERM=foot
   export TERMINAL=foot
   cores=$(nproc)
+  alias ctrlc='wl-copy'
+  alias ctrlv='wl-paste'
+  alias open=xdg-open
+  alias chmod="chmod -c"
+  alias chown="chown -c"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-  export TERM=xterm-kitty
+  # export TERM=xterm-256color
   export TERMINAL=kitty
   cores=$(sysctl -n hw.ncpu)
+  alias ctrlc='pbcopy'
+  alias ctrlv='pbpaste'
 fi
 
 export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
@@ -44,7 +51,7 @@ export GOPATH="${XDG_DATA_HOME}/go"
 export GOPATH="${XDG_DATA_HOME}/go"
 export GRADLE_USER_HOME="${XDG_DATA_HOME}/gradle"
 export GTK2_RC_FILES="${XDG_CONFIG_HOME}/gtk-2.0/gtkrc"
-export HISTFILE="${XDG_CACHE_HOME}/bash/history"
+export HISTFILE="${XDG_CACHE_HOME}/shell_history"
 export JUPYTER_CONFIG_DIR="${XDG_CONFIG_HOME}/jupyter"
 export LESSHISTFILE="${XDG_CACHE_HOME}/less/history"
 export LESSKEY="${XDG_CONFIG_HOME}/less/lesskey"
@@ -57,18 +64,18 @@ export R_HOME_USER="${XDG_CONFIG_HOME}/R"
 export R_PROFILE_USER="${XDG_CONFIG_HOME}/profile"
 export RUSTUP_HOME="${XDG_DATA_HOME}/rustup"
 export SQLITE_HISTORY="${XDG_CACHE_HOME}/sqlite_history"
-export TERMINFO_DIRS="${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
-export TERMINFO="${XDG_DATA_HOME}/terminfo"
+# export TERMINFO_DIRS="${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
+# export TERMINFO="${XDG_DATA_HOME}/terminfo"
 export TEXMFVAR="${XDG_CACHE_HOME}/texlive/texmf-var"
 export XCURSOR_PATH=/usr/share/icons:$XDG_DATA_HOME/icons
 export WINEPREFIX="${XDG_DATA_HOME}/wine"
+export ZDOTDIR="${XDG_CONFIG_HOME}/zsh"
 
 export PATH="$PATH:$CARGO_HOME/bin/"
 export PATH="$HOME/.local/bin:$PATH"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  export TERMINFO_DIRS="$TERMINFO_DIRS:/Applications/kitty.app/Contents/Resources/kitty/terminfo"
-  export PATH="$PATH:/$HOME/.local/share/rustup/toolchains/stable-aarch64-apple-darwin/bin/"
+  export PATH="$PATH:$HOME/.local/share/rustup/toolchains/stable-aarch64-apple-darwin/bin/"
 fi
 
 alias cp='cp -iv'
@@ -79,8 +86,6 @@ alias mkdir="mkdir -v"
 alias rmdir='rmdir -v'
 alias rcp='rsync -v --progress'
 alias rmv='rsync -v --progress --remove-source-files'
-alias chmod="chmod -c"
-alias chown="chown -c"
 
 # alias ls='ls --color=auto --human-readable --group-directories-first --classify'
 # alias ll='ls -al --color=auto --human-readable --group-directories-first --classify'
@@ -91,7 +96,8 @@ alias du='du -h --apparent-size'
 
 # alias grep='ripgrep --colour=auto'
 alias egrep='egrep --colour=auto'
-alias dyff="diff -W $COLUMNS --color=always --suppress-common-lines -y"
+# alias dyff="diff -W $COLUMNS --color=always --suppress-common-lines -y"
+alias dyff="diff -W 80 --color=always --suppress-common-lines -y"
 alias grep='echo "use `rg`" && sleep 3 && /usr/bin/grep --color=auto'
 # fish is using cut
 # alias cut='echo "use `choose`" && sleep 3 && /usr/bin/cut'
@@ -101,6 +107,7 @@ alias cloc=tokei
 alias man=batman
 alias py=pypy3
 alias xo=xdg-open
+alias mchezmoi="chezmoi -S ~/src/configuration/macos/chezmoi/"
 
 if ! command -v helix >/dev/null 2>&1; then
   for cmd in "/usr/bin/helix" "/usr/bin/hx"; do

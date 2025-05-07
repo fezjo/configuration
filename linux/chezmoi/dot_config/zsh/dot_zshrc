@@ -16,6 +16,7 @@ bindkey '^[3;5~' kill-word
 
 # Source ~/.profile if it exists (same as in bashrc)
 [[ -f ~/.profile ]] && source ~/.profile
+[[ -f ~/.config/shell-config.sh ]] && source ~/.config/shell-config.sh ".config/zsh/.zshrc"
 
 # Git branch function for prompt, with parentheses
 parse_git_branch() {
@@ -37,5 +38,3 @@ HISTSIZE=10000
 SAVEHIST=20000
 HISTCONTROL=ignoreboth
 setopt append_history
-
-exec fish

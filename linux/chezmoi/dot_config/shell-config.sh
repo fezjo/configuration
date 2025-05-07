@@ -4,6 +4,8 @@ export ENV_PROFILES="$ENV_PROFILES\n($(date))>by $1>shell-config.sh>start"
 
 SHELLNAME=$(basename "$(ps -p $$ -o comm=)")
 
+[[ -d /opt/homebrew ]] && eval "$(/opt/homebrew/bin/brew shellenv $SHELLNAME)"
+
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
 	yazi "$@" --cwd-file="$tmp"
@@ -25,5 +27,7 @@ export PYENV_ROOT="$HOME/.local/share/pyenv"
 # eval "$(pyenv init -)"
 
 # eval "$(antidot init)"
+
+export GPG_TTY=$(tty)
 
 export ENV_PROFILES="$ENV_PROFILES\n($(date))>by $1>shell-config.sh>end"

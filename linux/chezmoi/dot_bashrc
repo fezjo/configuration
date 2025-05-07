@@ -14,6 +14,7 @@ bind '"\C-h": backward-kill-word'
 bind '"\e[3;5~": kill-word'
 
 [[ -f ~/.profile ]] && . ~/.profile ".bashrc"
+[[ -f ~/.config/shell-config.sh ]] && source ~/.config/shell-config.sh ".bashrc"
 
 if command -v git >/dev/null 2>&1; then
     parse_git_branch() {
