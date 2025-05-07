@@ -30,7 +30,7 @@ if [ "$compiler" == "$cppcompile" ]; then
     if [ $force_recompile == true ]; then
         rm -f $exe
     fi
-    $cppcompile 0 $1 && Time ./$exe
+    $cppcompile 1 $1 && Time ./$exe
 elif [ $compiler == "make" ]; then
     exe=${1%.*}
     if [ $force_recompile == true ]; then

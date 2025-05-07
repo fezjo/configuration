@@ -6,7 +6,12 @@ set source_commands \
     # "thefuck --alias" \
     "basrs source $HOME/.profile $HERE" \
     "mise activate fish" \
-    "zoxide init fish"
+    "zoxide init fish" \
+    ""
+
+if test -d /opt/homebrew
+    set -p source_commands "/opt/homebrew/bin/brew shellenv"
+end
 
 for cmd in $source_commands
     eval "$cmd" | source
@@ -21,5 +26,7 @@ function fuck -d "Correct your previous console command"
         builtin history merge
     end
 end
+
+set -gx GPG_TTY (tty)
 
 set -gx ENV_PROFILES "$ENV_PROFILES\n($(date))>by $argv[1]>shell-config.fish>end"

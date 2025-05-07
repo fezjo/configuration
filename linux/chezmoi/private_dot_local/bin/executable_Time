@@ -2,4 +2,11 @@
 
 # echo "$@"
 
-/usr/bin/time -f "-----\nEXIT STATUS:%x\tCPU:%P\nReal:%es System:%Ss User:%Us | Memory:%MKB" "$@"
+# linux or macos
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    time="/usr/bin/time"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    time="/opt/homebrew/bin/gtime"
+fi
+
+$time -f "-----\nEXIT STATUS:%x\tCPU:%P\nReal:%es System:%Ss User:%Us | Memory:%MKB" "$@"

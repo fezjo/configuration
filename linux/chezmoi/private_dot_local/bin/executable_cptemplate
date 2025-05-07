@@ -8,7 +8,7 @@ file=$1
 suffix="${file##*.}"
 
 if [[ -f ~/Templates/template.$suffix ]]; then
-    cp ~/Templates/template.$suffix ./"$file"
+    cp -i ~/Templates/template.$suffix ./"$file"
 else
     touch ./"$file"
 fi
