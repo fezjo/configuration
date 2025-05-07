@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Iterable
 
 VERBOSE = False
+IS_MACOS = sys.platform == "darwin"
 
 # ANSI color codes
 class Colors:
@@ -23,6 +24,7 @@ class Colors:
 def colorecho(color: str, *args: str, file=sys.stderr) -> None:
     """Print text in specified color."""
     print(f"{color}{' '.join(map(str, args))}{Colors.RESET}", file=file)
+
 def echo(*args: str) -> None: colorecho(Colors.RESET, *args)
 def grayecho(*args: str) -> None: colorecho(Colors.GRAY, *args)
 def redecho(*args: str) -> None: colorecho(Colors.RED, *args)
@@ -34,7 +36,10 @@ def purpleecho(*args: str) -> None: colorecho(Colors.PURPLE, *args)
 
 def find_newest_bits_header(pattern: str) -> Path | None:
     """Find the newest header file matching the pattern."""
-    paths = list(Path("/usr/include/c++").glob(f"*/*/*/bits/{pattern}"))
+    base_path = Path(
+        "/opt/homebrew/Cellar/gcc/" if IS_MACOS else "/usr/include/c++"
+    )
+    paths = list(base_path.glob(f"**/bits/{pattern}"))
     return Path(sorted(paths)[-1]) if paths else None
 
 
@@ -65,7 +70,9 @@ def precompile_header(header_path: Path, parameters: str, precomp_dir: Path) -> 
     return True
 
 
-def precompile(parameters: str, includes: Iterable[str] = ()) -> tuple[bool, str]:
+def precompile(
+    parameters: str, includes: Iterable[str] = (), reprecompile: bool = False
+) -> tuple[bool, str]:
     """Precompile headers and return status and updated parameters.
     - we will precompile stdc++.h and extc++.h to speed up compilation
     - we will hash the flags to determine if we need to recompile them
@@ -75,10 +82,16 @@ def precompile(parameters: str, includes: Iterable[str] = ()) -> tuple[bool, str
     includes = set(includes)
     hash_value = hashlib.md5(parameters.encode()).hexdigest()
     precomp_dir = Path.home() / ".local/include" / f"c++-{hash_value}"
+    if reprecompile and precomp_dir.exists():
+        if VERBOSE:
+            redecho(f"Removing {precomp_dir}")
+        for file in precomp_dir.glob("*"):
+            file.unlink()
+        precomp_dir.rmdir()
     precomp_dir.mkdir(parents=True, exist_ok=True)
 
     headers = {
-        # "dbg.h": Path("/usr/include/dbg.h"),
+        # "dbg.h": Path("/opt/homebrew/include/dbg.h" if IS_MACOS else "/usr/include/dbg.h"),
         "bits/stdc++.h": find_newest_bits_header("stdc++.h"),
         "bits/extc++.h": find_newest_bits_header("extc++.h"),
     }
@@ -89,7 +102,7 @@ def precompile(parameters: str, includes: Iterable[str] = ()) -> tuple[bool, str
 
     if VERBOSE:
         greenecho(f"Precompiled headers are in {precomp_dir}")
-    return True, f"{parameters} " + " ".join(
+    return True, f"{parameters} -I {precomp_dir} " + " ".join(
         f"-include {precomp_dir / header_path.name}" for header_path in headers.values()
     )
 
@@ -108,6 +121,7 @@ def main():
     inp = args[1]
     outp = f"{os.path.splitext(inp)[0]}.bin"
     recompile = False
+    reprecompile = False
     if "-v" in args:
         global VERBOSE
         args.remove("-v")
@@ -115,6 +129,9 @@ def main():
     if "-f" in args:
         recompile = True
         args.remove("-f")
+    if "-p" in args:
+        args.remove("-p")
+        reprecompile = True
     if "-o" in args:
         inx = args.index("-o")
         assert inx + 1 < len(args), "Output file not specified"
@@ -148,7 +165,12 @@ def main():
         includes = re.findall(r'#include [<"](.+)[>"]', f.read())
 
     # Precompile headers
-    _success, parameters = precompile(parameters, includes)
+    _success, parameters = precompile(parameters, includes, reprecompile)
+
+    # Add dbg.h include if available
+    # dbg_path = Path.home() / ".local/include/dbg.h"
+    # if IS_MACOS and dbg_path.exists():
+    #     parameters += f" -I {dbg_path.parent} -include {dbg_path}"
     if VERBOSE:
         grayecho(parameters)
 

@@ -6,8 +6,15 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
 end
 
+if ! type -q basrs
+    set basrs_path $HOME/.local/share/cargo/bin/basrs
+    if test -f $basrs_path
+        alias basrs=$basrs_path
+    end
+end
+
 if status is-login && test -e /etc/profile
-    bass source /etc/profile
+    basrs source /etc/profile | source
 end
 
 # source $HOME/.config/fish/conf.d/profile
