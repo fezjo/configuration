@@ -1,0 +1,86 @@
+#!/bin/bash
+
+
+# Usage:
+# db new <name> [distro]
+# db enter <name>
+
+
+create_distrobox() {
+  local boxname="$1"
+  local distro="${2:-archlinux}"
+
+  if [ -z "$boxname" ]; then
+    echo "Usage: db new <name> [distro]"
+    exit 1
+  fi
+
+  local setup=""
+  if [ "$distro" = "archlinux" ]; then
+    local repo=yay-bin
+    setup="
+    sudo pacman-key --init &&
+    sudo pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com &&
+    sudo pacman-key --lsign-key 3056513887B78AEB &&
+    sudo pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst' &&
+    echo -e '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' | sudo tee -a /etc/pacman.conf &&
+    sudo pacman -Sy --needed --noconfirm git base-devel &&
+    ([ -d $repo ] &&
+      (cd $repo && pwd && git pull) ||
+      git clone https://aur.archlinux.org/yay-bin.git $repo
+    ) &&
+    cd $repo &&
+    makepkg -si --noconfirm &&
+    yay -S --noconfirm fastfetch &&
+    echo success
+    "
+  elif [[ "$distro" = "ubuntu" || "$distro" = "debian" ]]; then
+    setup="
+    sudo apt update &&
+    sudo apt install -y fastfetch zsh &&
+    echo success
+    "
+  else
+    echo "Unsupported distro: $distro"
+    exit 1
+  fi
+
+  cd ~
+  if [ -d "distrobox/$boxname" ]; then
+    echo "distrobox $boxname already exists"
+    exit 1
+  fi
+
+  mkdir -p distrobox
+  distrobox create --name "$boxname" --image "$distro:latest" --home "/home/fezjo/distrobox/${boxname}-home/" --yes
+  cd distrobox
+  distrobox enter "$boxname" -- sh -c "$setup"
+}
+
+enter_distrobox() {
+  local boxname="$1"
+  if [ -z "$boxname" ]; then
+    echo "Usage: db enter <name>"
+    exit 1
+  fi
+  distrobox enter "$boxname" -- sh -c "fastfetch && $SHELL"
+}
+
+main() {
+  local action="$1"
+  shift
+
+  if [[ "$action" == "new" ]]; then
+    create_distrobox "$@"
+  elif [[ "$action" == "enter" ]]; then
+    enter_distrobox "$@"
+  else
+    echo "Usage:"
+    echo "  db new <name> [distro]"
+    echo "  db enter <name>"
+    exit 1
+  fi
+}
+
+main "$@"
+

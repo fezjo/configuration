@@ -6,6 +6,7 @@ auto-pairs = false
 bufferline = "multiple"
 color-modes = true
 cursorline = true
+rainbow-brackets = true
 rulers = [80, 100]
 
 [editor.cursor-shape]
