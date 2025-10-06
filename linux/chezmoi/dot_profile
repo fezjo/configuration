@@ -124,7 +124,7 @@ alias scpr='rsync --archive -hh --partial --info=stats1,progress2 --modify-windo
 
 alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
 
-alias ubuntu='distrobox enter ubuntu -e sh -c "fastfetch && zsh"'
+alias debian='db enter debian'
 alias arch-test='distrobox enter arch-test -e sh -c "fastfetch && fish"'
 alias djvu2pdf='docker run --rm -u $(id -u):$(id -g) -v $(pwd):/opt/work ilyabystrov/djvu2pdf'
 

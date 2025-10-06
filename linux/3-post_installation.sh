@@ -20,9 +20,9 @@ mise use -g node
 xdg-mime default ssh.desktop x-scheme-handler/ssh
 
 # ZSwap
-sudo btrfs subvolume create /swap
-btrfs filesystem mkswapfile --size 16g --uuid clear /swap/swapfile
-sudo swapon /swap/swapfile
+sudo btrfs subvolume create /var/swap
+btrfs filesystem mkswapfile --size 32g --uuid clear /var/swap/swapfile
+sudo swapon /var/swap/swapfile
 echo "/swap/swapfile none swap defaults 0 0" | sudo tee -a /etc/fstab
 echo " zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=35" | sudo tee -a /etc/kernel/cmdline
 sudo reinstall-kernels

@@ -51,6 +51,7 @@
 + wlsunset
 
 # System Core & Base
++ arch-install-scripts
 + base
 + base-devel
 + linux-lts

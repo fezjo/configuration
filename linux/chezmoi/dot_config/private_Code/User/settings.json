@@ -17,7 +17,7 @@
     "security.workspace.trust.enabled": false,
     "telemetry.telemetryLevel": "off",
     "terminal.integrated.enableMultiLinePasteWarning": "never",
-    "terminal.integrated.persistentSessionScrollback": 1000,
+    "terminal.integrated.persistentSessionScrollback": 10000,
     "terminal.integrated.scrollback": 100000,
     "window.menuBarVisibility": "compact",
     "workbench.sideBar.location": "right",
