@@ -20,3 +20,9 @@ render = true
 [keys.normal]
 X = "extend_line_above"
 D = "delete_char_backward"
+
+[keys.normal.space]
+q = ":quit"
+Q = ":quit!"
+z = ":write"
+Z = ":write-quit"

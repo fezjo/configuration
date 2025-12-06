@@ -17,8 +17,6 @@ export BROWSER=zen-browser
 export EDITOR=hx
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  export TERM=foot
-  export TERMINAL=foot
   cores=$(nproc)
   alias ctrlc='wl-copy'
   alias ctrlv='wl-paste'
@@ -26,8 +24,6 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   alias chmod="chmod -c"
   alias chown="chown -c"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-  # export TERM=xterm-256color
-  export TERMINAL=kitty
   cores=$(sysctl -n hw.ncpu)
   alias ctrlc='pbcopy'
   alias ctrlv='pbpaste'
