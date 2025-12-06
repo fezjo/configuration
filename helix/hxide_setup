@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+
+read -r -p "Install dependencies? [y/N] " response
+if [[ ${response,,} =~ ^(yes|y)$ ]]; then
+	yay -S aichat bat fish fzf gh glow gum hurl lazygit lazysql-bin mods navi presenterm ripgrep slumber tig yazi wezterm envsubst go-yq helix-git
+fi
+
+raw_github='https://raw.githubusercontent.com/quantonganh/helix-wezterm/refs/heads/main'
+mkdir -p .config .local/bin
+curl $raw_github/.helix-wezterm.yaml > ~/.config/.helix-wezterm.yaml
+for script in helix-wezterm.sh helix-fzf.sh hxide-aichat.sh hx-aichat-last-reply.sh; do
+	curl $raw_github/$script > ~/.local/bin/$script
+	chmod +x ~/.local/bin/$script
+done
+
+cat >> ~/.config/helix/config.toml  <<EOF
+[keys.normal.space.","]
+b = ":sh helix-wezterm.sh blame %{buffer_name} %{cursor_line}"
+e = ":sh helix-wezterm.sh explorer"
+g = ":sh helix-wezterm.sh lazygit"
+o = ":sh helix-wezterm.sh open %{buffer_name} %{cursor_line}"
+q = ":sh helix-wezterm.sh query"
+r = ":sh helix-wezterm.sh run %{buffer_name}"
+s = ":sh helix-wezterm.sh slumber"
+m = ":sh helix-wezterm.sh mock"
+n = ":sh helix-wezterm.sh navi"
+p = ":sh helix-wezterm.sh present %{buffer_name}"
+t = ":sh helix-wezterm.sh test %{buffer_name}"
+
+[keys.select."'"]
+a = ":sh echo '%{selection}' > /tmp/aichat; helix-wezterm.sh ai %{buffer_name}"
+EOF
