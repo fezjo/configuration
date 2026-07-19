@@ -8,7 +8,11 @@ echo "Apply chezmoi from '$CONFIG/chezmoi' to '$HOME' ?"
 read -p "Press enter to continue"
 chezmoi apply -S $CONFIG/chezmoi
 
-chsh
+if [[ "$SHELL" != */fish ]]; then
+    if command -v fish >/dev/null 2>&1; then
+        chsh -s "$(command -v fish)"
+    fi
+fi
 
 fuck
 fuck
@@ -43,11 +47,14 @@ sudo systemctl restarat keyd
 localectl set-x11-keymap us-sk_dia
 localectl
 
+# Camera
+sudo usermod -aG video $USER
+
 # Python
 pipx ensurepath
 pypy3 -m ensurepip
 pypy3 -m pip install matplotlib
-pipx install input-tool shell-gpt xxh-xxh
+uvx install input-tool shell-gpt xxh-xxh
 # good tools: pre-commit pur vermin
 
 # Cron
@@ -108,11 +115,10 @@ check that pacman-mirrors are ok
 setup locales
 pipx completions
 
-modify /etc/pacman.conf
-modify /etc/makepkg.conf
 modify /etc/security/faillock.conf
 modify /etc/systemd/logind.conf.d/powerbutton.conf
 add things to /etc/dracut.conf.d/
+autologin
 
 setup timeshift
 EOF
