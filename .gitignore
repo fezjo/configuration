@@ -6,3 +6,5 @@ __pycache__/
 *.pyc
 install.log
 cmd_history.txt
+
+chezmoistate.boltdb
