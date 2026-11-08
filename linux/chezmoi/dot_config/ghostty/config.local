@@ -1,1 +1,5 @@
+font-family = IosevkaTerm Nerd Font
+gtk-titlebar = false
 shell-integration-features = cursor,sudo,title,no-cursor,ssh-env,ssh-terminfo
+working-directory = home
+window-inherit-working-directory = false
