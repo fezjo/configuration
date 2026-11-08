@@ -1,0 +1,8 @@
+*.bak
+*.backup.*
+*.orig
+*.rej
+__pycache__/
+*.pyc
+install.log
+cmd_history.txt
