@@ -3,17 +3,18 @@
 # '+' enables a package, '-' disables it (the sed above drops disabled lines).
 
 # Most essential
-## Installation
 + base-devel
-+ git
-+ mold
-## Usage
++ dux-shell
 + fish
 + helix
 + htop
 + ghostty
++ git
++ mold
 + niri
 + iwd
++ networkmanager
++ qutebrowser
 
 # Desktop Environments & Window Managers
 ## Configuration
@@ -71,6 +72,7 @@
 + man-pages
 + pacman-contrib
 + sudo
++ wget
 + zram-generator
 ## Boot
 - dracut
@@ -92,8 +94,10 @@
 + netctl
 + networkmanager
 + openbsd-netcat
++ localsend # local file sharing
 + openssh
 + parsec-bin
++ proton-vpn-gtk-app
 + tailscale
 + waypipe
 ## Disk & File Management
@@ -181,17 +185,25 @@
 ## Image Tools
 + feh
 + gimp
++ imagemagick
++ inkscape
 + pinta
 + viewnior
 + flameshot
 ## Audio/Video
 + mpv
 + vlc
++ vlc-plugins-all
 + syncplay
 + yt-dlp
 + pamixer
++ pavucontrol
 + audacity
 - cheese
+## Media Apps
++ amberol # music player
++ bookworm # ebook reader
++ cozy-audiobooks # audiobook player
 ## Documents
 + aspell-sk
 + evince
@@ -204,11 +216,12 @@
 ## AI
 - shellgpt-git
 - ollama
-+ opencode-desktop-bin
++ opencode-desktop
 ## Text Editors & IDEs
 + helix # rust
 + micro # go
 + mousepad
++ nano
 + neovim
 + visual-studio-code-bin
 + visidata
@@ -235,13 +248,14 @@
 + python-scipy
 + pypy3
 ## Programming Tools
++ perf
 + valgrind
 + uv # rust
 + ruff # rust
 + mise # rust
 + hyperfine # rust
 + testlib
-+ dbg-macro
+- dbg-macro
 + docker
 + docker-compose
 
@@ -253,6 +267,9 @@
 + virtualbox
 + virtualbox-host-dkms
 + distrobox
++ podman
++ podman-compose
++ podman-desktop
 + wine
 
 # Fonts

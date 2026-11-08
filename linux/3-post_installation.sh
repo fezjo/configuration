@@ -227,8 +227,16 @@ run sudo usermod -aG video "$USER_NAME" || warn "video group setup failed"
 # Python
 run pipx ensurepath || warn "pipx ensurepath failed"
 run pypy3 -m ensurepip || warn "pypy ensurepip failed"
-run pypy3 -m pip install matplotlib || warn "pypy matplotlib install failed"
-run uv tool install input-tool shell-gpt xxh-xxh || warn "uv tool install failed"
+# PyPy has no matplotlib wheel; keep the source build best-effort and out of
+# the main log.
+if (( DRY_RUN )); then
+    printf '    [dry-run] pypy3 -m pip install matplotlib\n'
+elif ! pypy3 -m pip install matplotlib >/tmp/pypy-matplotlib.log 2>&1; then
+    warn "pypy matplotlib install failed; see /tmp/pypy-matplotlib.log"
+fi
+for tool in input-tool shell-gpt xxh-xxh; do
+    run uv tool install "$tool" || warn "uv tool install $tool failed"
+done
 # good tools: pre-commit pur vermin
 
 # Cron
