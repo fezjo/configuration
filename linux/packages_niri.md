@@ -1,4 +1,6 @@
-# sed 's/#.*//; s/^\s*//; /^-/d; /^\s*$/d; s/^+ //' packages.md | yay -S --needed -
+# sed 's/#.*//; s/^\s*//; /^-/d; /^\s*$/d; s/^+ //' packages_niri.md | yay -S --needed -
+#
+# '+' enables a package, '-' disables it (the sed above drops disabled lines).
 
 # Most essential
 ## Installation
@@ -11,9 +13,7 @@
 + htop
 + ghostty
 + niri
-+ wdisplays
-+ firefox
-+ iwctl
++ iwd
 
 # Desktop Environments & Window Managers
 ## Configuration
@@ -35,8 +35,11 @@
 + wdisplays
 + wev
 + wl-clipboard
++ wtype
 + wlsunset
-+ xdg-desktop-portal-wlr
++ brightnessctl
+- xdg-desktop-portal-wlr # not used by niri
++ xdg-desktop-portal-gnome
 + xorg-xwayland
 + xwayland-satellite
 
@@ -44,26 +47,33 @@
 + niri
 
 ## DankMaterialShell
-+ quickshell-git
-+ dms-shell-niri
++ dux-shell
++ quickshell
 + matugen
 + cava
++ kimageformats
 + adw-gtk-theme
++ greetd
++ greetd-agreety
+- greetd-dms-greeter-git # not currently packaged; local build later
 
 # System
++ linux
++ linux-firmware
 + linux-lts
 ## Base tools
 + arch-install-scripts
 + base
 + base-devel
-+ linux-tools
 + man-db
 + man-pages
++ pacman-contrib
++ sudo
++ zram-generator
 ## Boot
 - dracut
 + efibootmgr
 + mkinitcpio
-+ systemd-boot
 ## Daemons & Services
 + gnome-keyring
 + polkit
@@ -71,6 +81,7 @@
 + xdg-desktop-portal
 + xdg-desktop-portal-gtk
 + systemd-resolvconf
++ cronie
 - bustd           # oom
 ## Network & Connectivity
 + blueman
@@ -92,11 +103,13 @@
 + gnome-disk-utility
 + gparted
 + tokei # rust, cloc
++ sshfs
 + stress-ng
 - szyszka-bin # rust, batch rename
 
 # System Configuration
 + chezmoi
++ age
 - etckeeper
 - xdg-ninja
 - antidot-bin
@@ -107,6 +120,8 @@
 + bash
 + zsh
 + fish
++ zsh-autosuggestions
++ zsh-syntax-highlighting
 ## Terminal Emulators
 + foot
 + ghostty
@@ -134,6 +149,7 @@
 ## Terminal Tools (Non-Rust)
 + fastfetch
 + fzf # go
++ jq
 + glow # go
 + lazydocker
 + ripdrag
@@ -152,7 +168,8 @@
 + qbittorrent
 ## Browsers
 + zen-browser-bin
-+ brave
++ brave-bin
++ qutebrowser
 ## Communication
 + discord
 + telegram-desktop
@@ -195,9 +212,9 @@
 + visidata
 + zed # rust
 ## Version Control
++ git
 + bliss # gitignore
 + difftastic
-+ git
 - gitbutler-bin
 + git-delta # rust
 + lazygit
@@ -229,11 +246,10 @@
 # Virtualization
 + qemu-desktop
 + libvirt
-+ quickemu
++ quickemu-git
 + virt-manager
 + virtualbox
-+ virtualbox-host-modules-arch
-+ virtualbox-host-modules-lts
++ virtualbox-host-dkms
 + distrobox
 + wine
 
@@ -242,7 +258,11 @@
 + ttf-hack-nerd
 + ttf-iosevkaterm-nerd
 + ttf-roboto-mono-nerd
++ noto-fonts
 + noto-fonts-emoji
++ noto-fonts-cjk
++ ttf-dejavu
++ ttf-liberation
 - ttf-ms-win11-auto
 
 # Check out later

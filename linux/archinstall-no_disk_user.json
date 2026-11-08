@@ -14,25 +14,56 @@
         },
         "print_service_config": {
             "enabled": true
+        },
+        "fonts_config": {
+            "fonts": [
+                "noto-fonts",
+                "noto-fonts-emoji",
+                "noto-fonts-cjk",
+                "ttf-liberation",
+                "ttf-dejavu"
+            ]
         }
     },
     "archinstall-language": "English",
+    "archinstall_language": "English",
+    "debug": false,
     "auth_config": {},
+    "users": [
+        {
+            "username": "fezjo",
+            "sudo": true,
+            "groups": [
+                "video",
+                "docker",
+                "libvirt"
+            ],
+            "enc_password": "$6$hGyvUhJMvfmjS7PR$ogjbK39dsNjan7xSZouQpPN4Ouq1.8W4Nt254K/H9Upc8Z8dJ0xAgeNd6nQA9.se98Eo6p18FKIgtwadakAuD."
+        }
+    ],
     "bootloader_config": {
         "bootloader": "Systemd-boot",
         "removable": false,
         "uki": true
     },
-    "custom_commands": [],
+    "custom_commands": [
+        "install -d /etc/greetd",
+        "printf '[terminal]\\nvt = 1\\n\\n[default_session]\\ncommand = \"agreety --cmd niri-session\"\\nuser = \"greeter\"\\n\\n[initial_session]\\ncommand = \"niri-session\"\\nuser = \"fezjo\"\\n' > /etc/greetd/config.toml",
+        "install -d /home/fezjo/.config/systemd/user/niri.service.d",
+        "printf '[Unit]\\nWants=dms.service\\n' > /home/fezjo/.config/systemd/user/niri.service.d/dms.conf",
+        "chown -R fezjo:fezjo /home/fezjo/.config/systemd"
+    ],
     "hostname": "TODO-disk-user-hostname",
     "kernels": [
         "linux",
         "linux-lts"
     ],
+    "firmware_optdeps": [],
     "locale_config": {
         "kb_layout": "us",
         "sys_enc": "UTF-8",
-        "sys_lang": "en_IE.UTF-8"
+        "sys_lang": "en_IE.UTF-8",
+        "console_font": "default8x16"
     },
     "mirror_config": {
         "custom_repositories": [],
@@ -203,49 +234,69 @@
     "network_config": {
         "type": "nm_iwd"
     },
+    "no_pkg_lookups": false,
     "ntp": true,
+    "offline": false,
     "packages": [
         "base",
         "base-devel",
-        "bat",
-        "bat-extras",
-        "bottom",
-        "fd",
-        "fish",
-        "ghostty",
         "git",
+        "fish",
         "helix",
         "htop",
+        "qutebrowser",
+        "niri",
+        "ghostty",
+        "dux-shell",
+        "quickshell",
+        "greetd",
+        "greetd-agreety",
+        "xdg-desktop-portal-gnome",
+        "xdg-desktop-portal-gtk",
+        "xwayland-satellite",
+        "polkit",
+        "gnome-keyring",
+        "networkmanager",
+        "iwd",
+        "sudo",
         "man-db",
         "man-pages",
-        "mold",
-        "niri",
-        "ouch",
-        "python",
-        "ripgrep",
-        "uv",
-        "wdisplays",
-        "yazi",
-        "zed",
-        "zellij",
-        "qutebrowser"
+        "linux",
+        "linux-firmware",
+        "linux-lts",
+        "brightnessctl",
+        "wl-clipboard",
+        "wtype",
+        "matugen",
+        "cava",
+        "kimageformats",
+        "keyd",
+        "jq"
     ],
-    "parallel_downloads": 0,
+    "pacman_config": {
+        "color": true,
+        "parallel_downloads": 10
+    },
     "profile_config": {
         "gfx_driver": null,
-        "greeter": "lightdm-gtk-greeter",
+        "greeter": null,
         "profile": {
             "custom_settings": {},
             "details": [],
-            "main": "Desktop"
+            "main": "Minimal"
         }
     },
     "script": null,
-    "services": [],
+    "silent": false,
+    "services": [
+        "NetworkManager",
+        "bluetooth",
+        "greetd"
+    ],
     "swap": {
         "algorithm": "zstd",
         "enabled": true
     },
     "timezone": "Europe/Bratislava",
-    "version": "4.1"
+    "version": "4.5"
 }
