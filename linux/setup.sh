@@ -35,10 +35,6 @@ if (( DRY_RUN )); then
     echo "== 2-install_packages.sh =="
     bash 2-install_packages.sh --dry-run niri
     echo
-    echo "== 4-memory.sh =="
-    # The memory script is read-only in --dry-run mode, so no sudo is needed.
-    bash 4-memory.sh --dry-run
-    echo
     echo "== system/apply.py =="
     # pacman/makepkg were already previewed by 1-pre. The remaining manifest
     # includes 0440 files such as /etc/sudoers.d, so reading it needs root.
@@ -53,16 +49,11 @@ if (( DRY_RUN )); then
     echo "== 3-post_installation.sh =="
     bash 3-post_installation.sh --dry-run
     echo
-    echo "== system/timeshift.sh =="
-    bash system/timeshift.sh --dry-run
-    echo
     echo "Dry run complete. No changes were made."
     exit 0
 fi
 
 bash 1-pre_installation.sh
 bash 2-install_packages.sh niri
-sudo bash 4-memory.sh --yes
 sudo python3 system/apply.py --apply --yes
 bash 3-post_installation.sh
-sudo bash system/timeshift.sh --yes

@@ -20,11 +20,12 @@ linux/
   packages_niri.md               # full package list ('+' enabled, '-' disabled)
   1-pre_installation.sh          # bootstrap, chaotic-aur, yay
   2-install_packages.sh          # install packages_niri.md
-  3-post_installation.sh         # chezmoi, services, optional tools
-  4-memory.sh                    # zram + swapfile + systemd-oomd
+  3-post_installation.sh         # chezmoi, memory, services, Timeshift
   setup.sh                       # full install flow
   system/apply.py                # file-only manifest runner
   system/manifest.toml           # files and file edits
+  system/memory.sh             # zram + swapfile + systemd-oomd
+  system/timeshift.sh            # Timeshift configuration
   root/                          # system files deployed by system/apply.py
   chezmoi/                       # home-directory source of truth
 archive/                         # unused configurations, not deployed
@@ -47,9 +48,9 @@ windows/                         # separate setup notes
 Local checks: `make check` (bash/sh/zsh/fish syntax, JSON, Python syntax, and
 niri config).
 
-`setup.sh` runs the pre-install step, installs the package list, configures
-memory, applies system files, runs the post-install step (chezmoi and
-services), and configures Timeshift. Run it as your user, not as root.
+`setup.sh` runs the pre-install step, installs the package list, applies
+system files, and runs the post-install step (chezmoi, memory, services, and
+Timeshift). Run it as your user, not as root.
 
 Preview the whole flow without changing anything:
 
@@ -58,13 +59,13 @@ bash linux/setup.sh --dry-run
 ```
 
 Each stage also supports `--dry-run` (`1-pre`, `2-install`, `3-post`) or an
-equivalent preview (`4-memory.sh --dry-run`, `system/apply.py --diff`,
-`system/timeshift.sh --dry-run`). The package stage splits its output into
-packages that would be installed, packages that would be updated, and a count
-of packages already up to date (which are not listed). `1-pre --dry-run`,
-`2-install --dry-run`, `3-post --dry-run`, and `4-memory.sh --dry-run` do not
-need root. `setup.sh --dry-run` still runs the full `apply.py --diff` with sudo
-because some manifest targets, such as `/etc/sudoers.d`, are root-only.
+equivalent preview (`system/apply.py --diff`). `3-post --dry-run` includes
+`system/memory.sh --dry-run` and `system/timeshift.sh --dry-run`. The package
+stage splits its output into packages that would be installed, packages that
+would be updated, and a count of packages already up to date (which are not
+listed). `1-pre --dry-run`, `2-install --dry-run`, and `3-post --dry-run` do
+not need root. `setup.sh --dry-run` still runs the full `apply.py --diff` with
+sudo because some manifest targets, such as `/etc/sudoers.d`, are root-only.
 
 `1-pre_installation.sh` installs `reflector`, backs up
 `/etc/pacman.d/mirrorlist` once to
@@ -78,8 +79,9 @@ It then installs `python` and applies the pacman and makepkg entries from
 `system/manifest.toml` through `system/apply.py --filter`, so
 `2-install_packages.sh` runs with the final pacman and makepkg configuration.
 
-`3-post --dry-run` checks `systemctl is-enabled` and `systemctl is-active` and
-reports the predicted enable/start/restart state changes.
+`3-post --dry-run` checks `systemctl is-enabled` and `systemctl is-active`,
+reports the predicted enable/start/restart state changes, and previews the
+memory and Timeshift steps.
 
 ## Environment
 
@@ -118,11 +120,12 @@ full diff. Diffs are colored on a terminal by default; use `--color=always` or
 
 It patches `pacman.conf`/`faillock.conf`, installs makepkg drop-ins, greetd
 config, keyd, sudoers, xkb, `dbg.h`, and SysRq settings. OOM/sysctl tuning is
-handled by `4-memory.sh`. The repo keeps no full-file copies of
+handled by `system/memory.sh`. The repo keeps no full-file copies of
 `pacman.conf`, `makepkg.conf`, or `faillock.conf`; the live files are patched
 or receive drop-ins.
 
-Timeshift is configured from the current root/LUKS UUIDs:
+Timeshift is configured from the current root/LUKS UUIDs. `3-post_installation.sh`
+runs it automatically; the commands below are for manual re-runs:
 
 ```bash
 sudo bash linux/system/timeshift.sh --dry-run
@@ -183,7 +186,8 @@ where the application supports them.
 
 ## OOM and SysRq
 
-`4-memory.sh` sets up zram, the disk swapfile overflow, and systemd-oomd.
+`system/memory.sh` sets up zram, the disk swapfile overflow, and
+systemd-oomd.
 `kernel.sysrq = 244` enables the useful emergency subset:
 
 - `Alt+SysRq+F` — invoke the OOM killer

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 4-memory.sh — portable memory tuning for Arch desktops
+# memory.sh — portable memory tuning for Arch desktops
 #
 #   zram (fast tier)  ->  low-priority disk swap (overflow)  ->  systemd-oomd
 #
@@ -12,11 +12,11 @@
 #   * no swap      -> creates one; existing disk swap -> left alone
 #
 # Usage:
-#   sudo bash 4-memory.sh                 # apply (asks for confirmation)
-#   bash 4-memory.sh --dry-run            # show what would change
-#   sudo bash 4-memory.sh --yes           # no confirmation (for setup.sh)
-#   sudo bash 4-memory.sh --status        # print current state, change nothing
-#   sudo bash 4-memory.sh --rollback      # undo everything this script did
+#   sudo bash linux/system/memory.sh            # apply (asks for confirmation)
+#   bash linux/system/memory.sh --dry-run       # show what would change
+#   sudo bash linux/system/memory.sh --yes      # no confirmation
+#   sudo bash linux/system/memory.sh --status   # print current state, change nothing
+#   sudo bash linux/system/memory.sh --rollback # undo everything this script did
 #
 # Options (env or flag):
 #   --user NAME         target desktop user (default: $SUDO_USER / $USER)
@@ -29,7 +29,8 @@
 # and only deletes the swapfile/subvolume if this script created them.
 set -euo pipefail
 
-MARK="# managed-by: 4-memory.sh"
+MARK="# managed-by: memory.sh"
+LEGACY_MARK="# managed-by: 4-memory.sh"
 STATE_DIR="/var/lib/setup-memory"
 STATE_FILE="$STATE_DIR/state"
 
@@ -94,7 +95,7 @@ write_file() {
   # Write to a temp file in the same directory and rename over the target, so a
   # pre-existing symlink is replaced instead of followed (avoids root writing
   # through a user-planted link).
-  tmp="$(mktemp "$dir/.4-memory.XXXXXX")" || return 1
+  tmp="$(mktemp "$dir/.memory.XXXXXX")" || return 1
   if ! printf '%s\n' "$content" > "$tmp"; then
     rm -f "$tmp"
     return 1
@@ -323,7 +324,7 @@ do_rollback() {
     /etc/systemd/system/tailscaled.service.d/60-oom.conf
   do
     [[ -f "$f" ]] || continue
-    if grep -qF "$MARK" "$f" 2>/dev/null; then
+    if grep -qF "$MARK" "$f" 2>/dev/null || grep -qF "$LEGACY_MARK" "$f" 2>/dev/null; then
       run rm -f "$f" && ok "removed $f"
     else
       skip "$f not created by this script"
@@ -332,15 +333,17 @@ do_rollback() {
   for u in "${USER_UNITS[@]}"; do
     f="$TARGET_HOME/.config/systemd/user/$u.service.d/60-oom.conf"
     [[ -f "$f" ]] || continue
-    if grep -qF "$MARK" "$f" 2>/dev/null; then
+    if grep -qF "$MARK" "$f" 2>/dev/null || grep -qF "$LEGACY_MARK" "$f" 2>/dev/null; then
       run rm -f "$f" && ok "removed $f"
     else
       skip "$f not created by this script"
     fi
   done
 
-  if grep -qF "$MARK (fstab)" /etc/fstab 2>/dev/null; then
+  if grep -qF "$MARK (fstab)" /etc/fstab 2>/dev/null \
+     || grep -qF "$LEGACY_MARK (fstab)" /etc/fstab 2>/dev/null; then
     run sed -i "\|^$MARK (fstab) begin|,\|^$MARK (fstab) end|d" /etc/fstab
+    run sed -i "\|^$LEGACY_MARK (fstab) begin|,\|^$LEGACY_MARK (fstab) end|d" /etc/fstab
     ok "fstab entries removed"
   fi
 
@@ -506,7 +509,8 @@ fi
 
 if [[ -n "$FOREIGN_SWAP" ]]; then
   :
-elif grep -qF "$MARK (fstab) begin" /etc/fstab; then
+elif grep -qF "$MARK (fstab) begin" /etc/fstab \
+     || grep -qF "$LEGACY_MARK (fstab) begin" /etc/fstab; then
   skip "fstab entries already present"
 else
   if [[ -n "$SWAP_MOUNT" ]]; then
@@ -523,7 +527,7 @@ $MARK (fstab) end"
   if (( DRY_RUN )); then
     printf '        [dry-run] append to /etc/fstab:\n%s\n' "$fstab_block" | sed 's/^/        /'
   else
-    cp -a /etc/fstab "/etc/fstab.bak-4-memory"
+    cp -a /etc/fstab "/etc/fstab.bak-memory"
     printf '\n%s\n' "$fstab_block" >> /etc/fstab
     systemctl daemon-reload
   fi

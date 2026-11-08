@@ -206,8 +206,11 @@ run mise use -g usage || warn "mise usage setup failed"
 run mise use -g node || warn "mise node setup failed"
 
 # Memory: zram + swapfile overflow + systemd-oomd
-# (run by setup.sh as step 4; safe to re-run any time)
-# sudo bash "$CONFIG/4-memory.sh" --yes
+if (( DRY_RUN )); then
+    bash "$CONFIG/system/memory.sh" --dry-run
+else
+    sudo bash "$CONFIG/system/memory.sh" --yes
+fi
 
 # Tailscale
 run_systemctl enable --now tailscaled || warn "tailscaled setup failed"
@@ -219,7 +222,7 @@ run_systemctl enable --now bluetooth.service || warn "bluetooth setup failed"
 
 # Keyboard, sudoers, logind, and SysRq settings are installed by
 # linux/system/apply.py before this script runs. OOM/sysctl tuning is
-# handled by 4-memory.sh.
+# handled by system/memory.sh.
 
 # Camera
 run sudo usermod -aG video "$USER_NAME" || warn "video group setup failed"
@@ -256,7 +259,7 @@ run sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 run_systemctl enable --now systemd-timesyncd || warn "systemd-timesyncd setup failed"
 
 # OOM
-# configured by 4-memory.sh and activated below.
+# configured by system/memory.sh and activated below.
 
 # Docker / libvirt groups
 run_systemctl enable --now docker || warn "docker setup failed"
@@ -281,6 +284,13 @@ run_systemctl restart keyd
 run_systemctl enable greetd
 run_systemctl enable --now systemd-oomd.socket systemd-oomd.service
 run_systemctl restart systemd-oomd.service
+
+# Timeshift
+if (( DRY_RUN )); then
+    bash "$CONFIG/system/timeshift.sh" --dry-run
+else
+    sudo bash "$CONFIG/system/timeshift.sh" --yes
+fi
 
 # Distrobox test box: create it explicitly with `db new arch-test` when needed.
 
@@ -308,6 +318,5 @@ setup locales
 pipx completions
 
 system files are applied by system/apply.py
-setup timeshift
 EOF
 fi
