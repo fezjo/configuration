@@ -51,6 +51,25 @@ niri config).
 chezmoi, runs the memory setup, and applies system configuration. Run it as
 your user, not as root.
 
+Preview the whole flow without changing anything:
+
+```bash
+bash linux/setup.sh --dry-run
+```
+
+Each stage also supports `--dry-run` (`1-pre`, `2-install`, `3-post`) or an
+equivalent preview (`4-memory.sh --dry-run`, `system/apply.py --diff`,
+`system/timeshift.sh --dry-run`). The package stage splits its output into
+packages that would be installed, packages that would be updated, and a count
+of packages already up to date (which are not listed). `1-pre --dry-run` and
+`setup.sh --dry-run` still need sudo for the filtered `apply.py --diff`
+preview; setup also needs it for `4-memory.sh`.
+
+`1-pre_installation.sh` installs `python`, then applies only the pacman and
+makepkg entries from `system/manifest.toml` through `system/apply.py
+--filter`. This means `2-install_packages.sh` runs with the final pacman and
+makepkg configuration instead of ad-hoc `sed`/`cp` edits.
+
 ## Environment
 
 `~/.config/environment.d/*.conf` is the single source for XDG directories and
@@ -72,6 +91,13 @@ sudo python3 linux/system/apply.py --check
 sudo python3 linux/system/apply.py --apply
 # activation happens in 3-post_installation.sh
 ```
+
+`--filter REGEX` limits `--plan`, `--diff`, `--check`, and `--apply` to entries
+whose destination matches the regex; `--exclude REGEX` skips matches. Both are
+repeatable; `1-pre_installation.sh` filters `/etc/pacman.conf` and
+`/etc/makepkg.conf.d/`, and `setup.sh --dry-run` excludes them from the final
+full diff. Diffs are colored on a terminal by default; use `--color=always` or
+`--color=never` to override.
 
 It patches `pacman.conf`/`faillock.conf`, installs makepkg drop-ins, greetd
 config, keyd, sudoers, xkb, `dbg.h`, OOM drop-ins, and SysRq settings. The repo

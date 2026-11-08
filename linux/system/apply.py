@@ -19,6 +19,35 @@ BASE = Path(__file__).resolve().parent
 LINUX = BASE.parent
 DEFAULT_MANIFEST = BASE / "manifest.toml"
 
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+CYAN = "\033[36m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
+
+def colorize_diff(diff: str, enabled: bool) -> str:
+    if not enabled:
+        return diff
+    lines = []
+    for line in diff.splitlines(keepends=True):
+        body = line.rstrip("\n")
+        newline = "\n" if line.endswith("\n") else ""
+        if body.startswith(("---", "+++")):
+            lines.append(f"{BOLD}{body}{RESET}{newline}")
+        elif body.startswith("@@"):
+            lines.append(f"{CYAN}{body}{RESET}{newline}")
+        elif body.startswith("+"):
+            lines.append(f"{GREEN}{body}{RESET}{newline}")
+        elif body.startswith("-"):
+            lines.append(f"{RED}{body}{RESET}{newline}")
+        elif body.startswith(("mode:", "Binary files")):
+            lines.append(f"{YELLOW}{body}{RESET}{newline}")
+        else:
+            lines.append(line)
+    return "".join(lines)
+
 
 def die(message: str) -> NoReturn:
     print(f"error: {message}", file=sys.stderr)
@@ -154,6 +183,27 @@ def edit_state(entry: dict[str, Any]) -> tuple[bool, str, str | None]:
     return True, f"{dest}", text_diff(old, new, str(dest), str(dest) + " (desired)")
 
 
+def filter_manifest(
+    manifest: dict[str, Any], patterns: list[str], exclude: list[str]
+) -> dict[str, Any]:
+    if not patterns and not exclude:
+        return manifest
+    filtered: dict[str, Any] = {}
+    for section in ("file", "edit"):
+        entries = []
+        for entry in manifest.get(section, []):
+            target = entry.get("dest") or entry.get("file", "")
+            if patterns and not any(
+                re.search(pattern, target) for pattern in patterns
+            ):
+                continue
+            if exclude and any(re.search(pattern, target) for pattern in exclude):
+                continue
+            entries.append(entry)
+        filtered[section] = entries
+    return filtered
+
+
 def collect(manifest: dict[str, Any]) -> list[tuple[str, bool, str, str | None]]:
     actions: list[tuple[str, bool, str, str | None]] = []
     for entry in manifest.get("file", []):
@@ -216,6 +266,26 @@ def main() -> int:
     group.add_argument("--apply", action="store_true", help="apply changes")
     parser.add_argument("--yes", "-y", action="store_true", help="do not prompt")
     parser.add_argument("--no-backup", action="store_true")
+    parser.add_argument(
+        "--filter",
+        action="append",
+        default=[],
+        metavar="REGEX",
+        help="only process entries whose dest/file matches REGEX (repeatable)",
+    )
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="REGEX",
+        help="skip entries whose dest/file matches REGEX (repeatable)",
+    )
+    parser.add_argument(
+        "--color",
+        choices=("auto", "always", "never"),
+        default="auto",
+        help="color diffs and status (default: auto)",
+    )
     args = parser.parse_args()
 
     if not (args.plan or args.diff or args.check or args.apply):
@@ -224,20 +294,27 @@ def main() -> int:
     if os.geteuid() != 0:
         die("run as root; apply.py inspects 0440 files such as /etc/sudoers.d")
 
-    manifest = load_manifest(args.manifest)
+    manifest = filter_manifest(load_manifest(args.manifest), args.filter, args.exclude)
     actions = collect(manifest)
     changed = [a for a in actions if a[1]]
+    use_color = args.color == "always" or (
+        args.color == "auto" and sys.stdout.isatty()
+    )
 
     if args.plan:
         for kind, is_changed, label, _ in actions:
-            print(f"{'CHANGE' if is_changed else 'ok    '}  {kind:7}  {label}")
+            status = "CHANGE" if is_changed else "ok    "
+            if use_color:
+                status = f"{YELLOW if is_changed else GREEN}{status}{RESET}"
+            print(f"{status}  {kind:7}  {label}")
         print(f"\n{len(changed)} change(s)")
         return 0
 
     if args.diff:
         for _, is_changed, _, diff in actions:
             if is_changed and diff:
-                print(diff, end="" if diff.endswith("\n") else "\n")
+                colored = colorize_diff(diff, use_color)
+                print(colored, end="" if colored.endswith("\n") else "\n")
         print(f"{len(changed)} change(s)")
         return 0
 
