@@ -2,51 +2,98 @@
 	name = Jozef Číž
 	email = jozef.ciz.ml@gmail.com
 	signingkey = jozef.ciz.ml@gmail.com
+
+[alias]
+	fpush = push --force-with-lease
+	amend = commit --amend
+	fixup = commit --fixup
+	ibase = rebase -i --autosquash
+	graph = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all
+	ignore-add = update-index --skip-worktree
+	ignore-remove = update-index --no-skip-worktree
+	ignore-list = !git ls-files -v | grep "^S" | cut -c 3-
+
 [branch]
-    sort = -committerdate
+	sort = -committerdate
+
 [column]
-    ui = auto
+	ui = auto
+
 [commit]
 	gpgsign = true
+
 [cola]
 	spellcheck = false
+
 [core]
 	excludesFile = ~/.config/git/gitignore
 	pager = delta
-    untrackedCache = true
+	editor = helix
+	untrackedCache = true
+
 [credential "https://github.com"]
 	helper = !/usr/bin/gh auth git-credential
+
 [delta]
 	navigate = true
+
 [diff]
-    algorithm = histogram
-    colorMoved = plain
-    mnemonicPrefix = true
-    renames = true
+	algorithm = histogram
+	colorMoved = plain
+	mnemonicPrefix = true
+	renames = copies
+	guitool = vscode
+
+[difftool "vscode"]
+	cmd = code --wait --diff "$LOCAL" "$REMOTE"
+
 [fetch]
-    prune = true
-    pruneTags = true
-    all = true
+	prune = true
+	pruneTags = true
+	all = true
+
 [gpg]
 	program = /usr/bin/gpg
+
 [help]
-    autocorrect = prompt
+	autocorrect = prompt
+
 [interactive]
 	diffFilter = delta --color-only
+
 [merge]
 	conflictStyle = zdiff3
+
 [pull]
-    rebase = true
+	rebase = true
+
 [push]
-    autoSetupRemote = true
-    default = simple
-    followTags = true
+	autoSetupRemote = true
+	default = simple
+	followTags = true
+
 [rebase]
-    autoSquash = true
-    autoStash = true
-    updateRefs = true
+	autoSquash = true
+	autoStash = true
+	updateRefs = true
+	instructionFormat = (%an) %s
+	missingCommitsCheck = warn
+
 [rerere]
-    autoupdate = true
+	autoupdate = true
 	enabled = true
+
+[status]
+	short = true
+	branch = true
+	showStash = true
+	showUntrackedFiles = all
+
 [tag]
-    sort = version:refname
+	sort = version:refname
+
+[url "https://github.com/"]
+	insteadOf = gh:
+
+[worktree]
+	useRelativePaths = true
