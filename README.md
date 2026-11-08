@@ -62,7 +62,8 @@ individual shell files.
 
 ## System configuration
 
-`linux/system/apply.py` is file-only and reads `manifest.toml`:
+`linux/system/apply.py` is file-only and reads `manifest.toml`. It requires
+Python 3.11 or newer because it uses the standard-library `tomllib`:
 
 ```bash
 sudo python3 linux/system/apply.py --plan

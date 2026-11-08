@@ -140,7 +140,7 @@
 - python-odfpy
 - python-pipx
 - python-scipy
-@ pypy3.10
+@ pypy3
 
 ## Programming Tools
 + valgrind

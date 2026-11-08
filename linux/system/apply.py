@@ -4,8 +4,6 @@
 The manifest describes files and edits. Service activation and commands belong
 in 3-post_installation.sh.
 """
-from __future__ import annotations
-
 import argparse
 import difflib
 import os
@@ -15,7 +13,7 @@ import sys
 import tomllib
 from datetime import datetime
 from pathlib import Path
-from typing import NoReturn
+from typing import Any, NoReturn
 
 BASE = Path(__file__).resolve().parent
 LINUX = BASE.parent
@@ -27,7 +25,7 @@ def die(message: str) -> NoReturn:
     raise SystemExit(2)
 
 
-def load_manifest(path: Path) -> dict:
+def load_manifest(path: Path) -> dict[str, Any]:
     try:
         with path.open("rb") as fh:
             data = tomllib.load(fh)
@@ -54,7 +52,7 @@ def read_text(path: Path) -> str | None:
         return None
 
 
-def apply_edit(text: str, edit: dict) -> str:
+def apply_edit(text: str, edit: dict[str, Any]) -> str:
     kind = edit.get("kind")
     file = edit.get("file", "<unknown>")
     if kind in ("option", "value"):
@@ -110,7 +108,7 @@ def apply_edit(text: str, edit: dict) -> str:
     die(f"{file}: unknown edit kind {kind!r}")
 
 
-def file_state(entry: dict) -> tuple[bool, str, str | None]:
+def file_state(entry: dict[str, Any]) -> tuple[bool, str, str | None]:
     """Return (changed, label, diff_or_none)."""
     src = LINUX / entry["src"]
     dest = Path(entry["dest"])
@@ -142,7 +140,7 @@ def file_state(entry: dict) -> tuple[bool, str, str | None]:
     return True, f"{dest}", diff
 
 
-def edit_state(entry: dict) -> tuple[bool, str, str | None]:
+def edit_state(entry: dict[str, Any]) -> tuple[bool, str, str | None]:
     dest = Path(entry["file"])
     if not dest.is_file():
         die(f"missing target {dest}")
@@ -156,7 +154,7 @@ def edit_state(entry: dict) -> tuple[bool, str, str | None]:
     return True, f"{dest}", text_diff(old, new, str(dest), str(dest) + " (desired)")
 
 
-def collect(manifest: dict) -> list[tuple[str, bool, str, str | None]]:
+def collect(manifest: dict[str, Any]) -> list[tuple[str, bool, str, str | None]]:
     actions: list[tuple[str, bool, str, str | None]] = []
     for entry in manifest.get("file", []):
         changed, label, diff = file_state(entry)
@@ -175,7 +173,7 @@ def backup(dest: Path, backup_root: Path) -> None:
     shutil.copy2(dest, target)
 
 
-def apply_actions(manifest: dict, backup_root: Path, backup_enabled: bool) -> int:
+def apply_actions(manifest: dict[str, Any], backup_root: Path, backup_enabled: bool) -> int:
     changes = 0
     for entry in manifest.get("file", []):
         src = LINUX / entry["src"]

@@ -29,7 +29,7 @@ brew install \
 	helix libreoffice micro neovim zed \
 	git git-delta \
 	rustup gcc \
-	pypy3.10 \
+	pypy3 \
 	valgrind uv ruff mise hyperfine stress docker-compose \
 	typst tectonic pandoc texlive aspell \
 	utm \
