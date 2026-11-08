@@ -1,0 +1,17 @@
+window-decoration = false
+window-padding-x = 12
+window-padding-y = 12
+background-blur-radius = 32
+scrollback-limit = 3023
+mouse-hide-while-typing = true
+copy-on-select = false
+confirm-close-surface = false
+app-notifications = no-clipboard-copy,no-config-reload
+keybind = ctrl+shift+n=new_window
+keybind = ctrl+t=new_tab
+keybind = ctrl+plus=increase_font_size:1
+keybind = ctrl+minus=decrease_font_size:1
+keybind = ctrl+zero=reset_font_size
+keybind = shift+enter=text:\n
+unfocused-split-fill = #44464f
+gtk-single-instance = true
