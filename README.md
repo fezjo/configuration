@@ -2,7 +2,7 @@
 
 Personal configuration for Arch Linux (primary), macOS and Windows.
 
-## Current Linux stack
+## Linux stack
 
 - niri compositor
 - Dux Shell / DMS (`dux-shell`)
@@ -27,9 +27,9 @@ linux/
   system/manifest.toml           # files and file edits
   root/                          # system files deployed by system/apply.py
   chezmoi/                       # home-directory source of truth
-archive/                         # old desktops/scripts, not deployed
-macos/                           # kept, separate setup
-windows/                         # kept
+archive/                         # unused configurations, not deployed
+macos/                           # separate setup
+windows/                         # separate setup notes
 ```
 
 ## Install
@@ -74,14 +74,12 @@ rate, and re-syncs before installing the bootstrap tools. If reflector fails,
 it restores the backup first. Override `REFLECTOR_COUNTRIES` to change the
 list; set it to an empty value to disable the country filter.
 
-It then installs `python` and applies only the pacman and makepkg entries from
-`system/manifest.toml` through `system/apply.py --filter`. This means
-`2-install_packages.sh` runs with the final pacman and makepkg configuration
-instead of ad-hoc `sed`/`cp` edits.
+It then installs `python` and applies the pacman and makepkg entries from
+`system/manifest.toml` through `system/apply.py --filter`, so
+`2-install_packages.sh` runs with the final pacman and makepkg configuration.
 
 `3-post --dry-run` checks `systemctl is-enabled` and `systemctl is-active` and
-reports the predicted enable/start/restart state changes instead of printing
-the raw commands.
+reports the predicted enable/start/restart state changes.
 
 ## Environment
 
@@ -181,7 +179,7 @@ where the application supports them.
 
 `Mod+Alt+V` opens the DMS clipboard history.
 
-The old niri `Mod+C` column-center action is now `Mod+Shift+C`.
+`Mod+Shift+C` centers the focused column.
 
 ## OOM and SysRq
 
@@ -208,10 +206,7 @@ before running `setup.sh`; it is not stored here. Install `age` from the package
 list on new machines. The deployed chezmoi config expects the repository at
 `~/src/configuration`; change `sourceDir` if you clone elsewhere.
 
-Note that earlier git history still contains the old plaintext SSH files; the
-encryption protects the current tree, not historical commits.
-
 ## Archive
 
-`archive/` contains the old sway/i3/rofi/zsh4humans/xonsh/LunarVim setup and
-scripts tied to those environments. It is not deployed.
+`archive/` contains unused desktop, shell, editor, and tool configurations plus
+the scripts tied to them. It is not deployed.

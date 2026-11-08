@@ -3,36 +3,6 @@ TODO
 
 # Packages
 
-### Old
-```
-baobab bat base base-devel copyq feh flameshot gimp gnome-disk-utility \
-gparted htop idlex libreoffice man mpv nerd-fonts-roboto-mono neovim \
-oh-my-zsh-git pamixer pinta qbittorrent redshift rsync syncplay \
-telegram-desktop tk tokei valgrind viewnior visual-studio-code-bin \
-vivaldi wormhole-william yt-dlp zsh-theme-powerlevel10k
-
-lxappearance-gtk3 dconf
-solaar tmux discord play-with-mpv zoom slack firefox
-mpd ncmpcpp
-polkit gnome-keyring polkit-gnome bluez nm-applet networkmanager
-sway swaylock swayi3dle wev wdisplays xorg-xwayland foot xdg-desktop-portal[,-wlr] grim slurp wl-copy kanshi wlsunset sway-systemd
-dracut efibootmgr
-mousepad thunar
-pscircle
-cf-tool time zip unzip atool
-xonsh python-pip python-sympy 
-man-pages wsdd
-unrar
-firacode noto-fonts-emoji
-geary gnome-control-center
-parsec-bin
-linux-tools
-
-i3-wm i3exit i3lock polybar rofi dunst alacritty
-
-kooha geogebra? bottom cheese gnome-clocks gnome-power-statistics   
-```
-
 ## System
 ```
 base base-devel linux-tools
