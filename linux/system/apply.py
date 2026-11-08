@@ -145,20 +145,22 @@ def file_state(entry: dict[str, Any]) -> tuple[bool, str, str | None]:
     if not src.is_file():
         die(f"missing source {src}")
 
+    dest_is_file = dest.is_file()
     try:
-        dest_bytes = dest.read_bytes() if dest.is_file() else b""
+        dest_bytes = dest.read_bytes() if dest_is_file else b""
     except PermissionError:
         die(f"cannot read {dest}; run as root to inspect it")
     except OSError as exc:
         die(f"cannot read {dest}: {exc}")
     src_bytes = src.read_bytes()
-    content_changed = dest_bytes != src_bytes
-    mode_changed = dest.is_file() and (dest.stat().st_mode & 0o7777) != mode
+    # A missing destination is always a change, even when the source is empty.
+    content_changed = not dest_is_file or dest_bytes != src_bytes
+    mode_changed = dest_is_file and (dest.stat().st_mode & 0o7777) != mode
     changed = content_changed or mode_changed
     if not changed:
         return False, f"{dest}", None
 
-    old = read_text(dest) if dest.is_file() else ""
+    old = read_text(dest) if dest_is_file else ""
     new = read_text(src)
     if old is None or new is None:
         diff = f"Binary files {dest} and {src} differ\n"
@@ -173,9 +175,12 @@ def edit_state(entry: dict[str, Any]) -> tuple[bool, str, str | None]:
     dest = Path(entry["file"])
     if not dest.is_file():
         die(f"missing target {dest}")
-    old = read_text(dest)
-    if old is None:
-        die(f"cannot read {dest} as text")
+    try:
+        old = dest.read_text(encoding="utf-8")
+    except PermissionError:
+        die(f"cannot read {dest}; run as root to inspect it")
+    except (OSError, UnicodeDecodeError) as exc:
+        die(f"cannot read {dest} as text: {exc}")
     new = apply_edit(old, entry)
     changed = old != new
     if not changed:
@@ -188,16 +193,19 @@ def filter_manifest(
 ) -> dict[str, Any]:
     if not patterns and not exclude:
         return manifest
+    try:
+        includes = [re.compile(pattern) for pattern in patterns]
+        excludes = [re.compile(pattern) for pattern in exclude]
+    except re.error as exc:
+        die(f"invalid filter/exclude regex: {exc}")
     filtered: dict[str, Any] = {}
     for section in ("file", "edit"):
         entries = []
         for entry in manifest.get(section, []):
             target = entry.get("dest") or entry.get("file", "")
-            if patterns and not any(
-                re.search(pattern, target) for pattern in patterns
-            ):
+            if includes and not any(pattern.search(target) for pattern in includes):
                 continue
-            if exclude and any(re.search(pattern, target) for pattern in exclude):
+            if excludes and any(pattern.search(target) for pattern in excludes):
                 continue
             entries.append(entry)
         filtered[section] = entries
@@ -218,12 +226,55 @@ def collect(manifest: dict[str, Any]) -> list[tuple[str, bool, str, str | None]]
 def backup(dest: Path, backup_root: Path) -> None:
     if not dest.exists():
         return
-    target = backup_root / str(dest).lstrip("/").replace("/", "_")
+    # Keep the original directory layout so two different paths can never
+    # collapse onto the same backup name.
+    relative = dest.relative_to("/") if dest.is_absolute() else dest
+    target = backup_root / relative
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(dest, target)
 
 
 def apply_actions(manifest: dict[str, Any], backup_root: Path, backup_enabled: bool) -> int:
+    # Validate every destination before touching anything. This also refuses
+    # to write through symlinks when running as root.
+    for entry in manifest.get("file", []):
+        dest = Path(entry["dest"])
+        if dest.is_symlink():
+            die(f"refusing to write through symlink {dest}")
+        if dest.exists() and not dest.is_file():
+            die(f"{dest} is not a regular file")
+    for entry in manifest.get("edit", []):
+        dest = Path(entry["file"])
+        if dest.is_symlink():
+            die(f"refusing to write through symlink {dest}")
+        if not dest.is_file():
+            die(f"missing target {dest}")
+
+    # Find all changed destinations and back them up before the first write, so
+    # a backup failure cannot leave a partially applied manifest.
+    changed_dests: list[Path] = []
+    for entry in manifest.get("file", []):
+        changed, _, _ = file_state(entry)
+        if changed:
+            changed_dests.append(Path(entry["dest"]))
+    for entry in manifest.get("edit", []):
+        changed, _, _ = edit_state(entry)
+        if changed:
+            changed_dests.append(Path(entry["file"]))
+    if not changed_dests:
+        return 0
+    if backup_enabled:
+        try:
+            backup_root.mkdir(parents=True, exist_ok=True)
+            os.chmod(backup_root, 0o700)
+        except OSError as exc:
+            die(f"cannot create backup directory {backup_root}: {exc}")
+        for dest in dict.fromkeys(changed_dests):
+            try:
+                backup(dest, backup_root)
+            except OSError as exc:
+                die(f"cannot back up {dest}: {exc}")
+
     changes = 0
     for entry in manifest.get("file", []):
         src = LINUX / entry["src"]
@@ -233,8 +284,6 @@ def apply_actions(manifest: dict[str, Any], backup_root: Path, backup_enabled: b
         if not changed:
             continue
         changes += 1
-        if backup_enabled:
-            backup(dest, backup_root)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dest)
         os.chmod(dest, mode)
@@ -245,8 +294,6 @@ def apply_actions(manifest: dict[str, Any], backup_root: Path, backup_enabled: b
         if not changed:
             continue
         changes += 1
-        if backup_enabled:
-            backup(dest, backup_root)
         old_mode = dest.stat().st_mode & 0o7777
         text = read_text(dest)
         assert text is not None
@@ -291,8 +338,8 @@ def main() -> int:
     if not (args.plan or args.diff or args.check or args.apply):
         args.plan = True
 
-    if os.geteuid() != 0:
-        die("run as root; apply.py inspects 0440 files such as /etc/sudoers.d")
+    if args.apply and os.geteuid() != 0:
+        die("run as root to apply system files")
 
     manifest = filter_manifest(load_manifest(args.manifest), args.filter, args.exclude)
     actions = collect(manifest)
@@ -327,7 +374,10 @@ def main() -> int:
         return 0
 
     if not args.yes:
-        reply = input(f"Apply {len(changed)} change(s)? [y/N] ")
+        try:
+            reply = input(f"Apply {len(changed)} change(s)? [y/N] ")
+        except EOFError:
+            die("aborted (no input)")
         if reply.lower() not in ("y", "yes"):
             die("aborted")
 

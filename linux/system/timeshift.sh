@@ -75,17 +75,40 @@ source_file="$TARGET"
 
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
-cp "$source_file" "$tmp"
 
-sed -i -E \
-    -e "s|\"backup_device_uuid\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"backup_device_uuid\" : \"$root_uuid\"|" \
-    -e "s|\"parent_device_uuid\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"parent_device_uuid\" : \"${parent_uuid:-$root_uuid}\"|" \
-    -e 's|"do_first_run"[[:space:]]*:[[:space:]]*"[^"]*"|"do_first_run" : "false"|' \
-    -e "s|\"btrfs_mode\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"btrfs_mode\" : \"$([[ "$root_fstype" == "btrfs" ]] && echo true || echo false)\"|" \
-    -e 's|"include_btrfs_home"[[:space:]]*:[[:space:]]*"[^"]*"|"include_btrfs_home" : "false"|' \
-    -e 's|"include_btrfs_home_for_backup"[[:space:]]*:[[:space:]]*"[^"]*"|"include_btrfs_home_for_backup" : "false"|' \
-    -e 's|"include_btrfs_home_for_restore"[[:space:]]*:[[:space:]]*"[^"]*"|"include_btrfs_home_for_restore" : "false"|' \
-    "$tmp"
+command -v python3 >/dev/null 2>&1 || die "python3 is required"
+
+btrfs=false
+[[ "$root_fstype" == "btrfs" ]] && btrfs=true
+
+if ! python3 - "$source_file" "$tmp" "$root_uuid" "${parent_uuid:-$root_uuid}" "$btrfs" <<'PY'
+import json
+import sys
+
+src, dst, root_uuid, parent_uuid, btrfs = sys.argv[1:]
+try:
+    with open(src, encoding="utf-8") as fh:
+        data = json.load(fh)
+except (OSError, ValueError) as exc:
+    print(f"cannot read {src}: {exc}", file=sys.stderr)
+    raise SystemExit(1)
+
+# Set required keys even when an older config is missing them.
+data["backup_device_uuid"] = root_uuid
+data["parent_device_uuid"] = parent_uuid
+data["do_first_run"] = "false"
+data["btrfs_mode"] = btrfs
+data["include_btrfs_home"] = "false"
+data["include_btrfs_home_for_backup"] = "false"
+data["include_btrfs_home_for_restore"] = "false"
+
+with open(dst, "w", encoding="utf-8") as fh:
+    json.dump(data, fh, indent=4)
+    fh.write("\n")
+PY
+then
+    die "cannot update $source_file"
+fi
 
 if (( DRY_RUN )); then
     printf '        [dry-run] install %s -> %s\n' "$source_file" "$TARGET"

@@ -36,13 +36,19 @@ if (( DRY_RUN )); then
     bash 2-install_packages.sh --dry-run niri
     echo
     echo "== 4-memory.sh =="
-    sudo bash 4-memory.sh --dry-run
+    # The memory script is read-only in --dry-run mode, so no sudo is needed.
+    bash 4-memory.sh --dry-run
     echo
     echo "== system/apply.py =="
-    # pacman/makepkg were already previewed by 1-pre.
-    sudo python3 system/apply.py --diff \
-        --exclude '^/etc/pacman\.conf$' \
-        --exclude '^/etc/makepkg\.conf\.d/'
+    # pacman/makepkg were already previewed by 1-pre. The remaining manifest
+    # includes 0440 files such as /etc/sudoers.d, so reading it needs root.
+    if command -v python3 >/dev/null 2>&1; then
+        sudo python3 system/apply.py --diff \
+            --exclude '^/etc/pacman\.conf$' \
+            --exclude '^/etc/makepkg\.conf\.d/'
+    else
+        echo "python3 is not installed; skipping the system file diff preview"
+    fi
     echo
     echo "== 3-post_installation.sh =="
     bash 3-post_installation.sh --dry-run

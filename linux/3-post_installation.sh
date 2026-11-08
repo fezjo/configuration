@@ -28,6 +28,9 @@ run() {
     "$@"
 }
 
+declare -A PREDICTED_ENABLED=()
+declare -A PREDICTED_ACTIVE=()
+
 run_systemctl() {
     local -a args=("$@")
     local user=0
@@ -62,37 +65,68 @@ run_systemctl() {
         return
     fi
 
-    local unit enabled active changes
+    local scope=system
+    if (( user )); then
+        scope=user
+    fi
+    local unit key enabled active changes
     for unit in "${units[@]}"; do
-        if (( user )); then
-            enabled=$(systemctl --user is-enabled "$unit" 2>/dev/null || true)
-            active=$(systemctl --user is-active "$unit" 2>/dev/null || true)
+        key="$scope:$unit"
+        if [[ -v "PREDICTED_ENABLED[$key]" ]]; then
+            enabled=${PREDICTED_ENABLED["$key"]}
+            active=${PREDICTED_ACTIVE["$key"]}
         else
-            enabled=$(systemctl is-enabled "$unit" 2>/dev/null || true)
-            active=$(systemctl is-active "$unit" 2>/dev/null || true)
+            if (( user )); then
+                enabled=$(systemctl --user is-enabled "$unit" 2>/dev/null || true)
+                active=$(systemctl --user is-active "$unit" 2>/dev/null || true)
+            else
+                enabled=$(systemctl is-enabled "$unit" 2>/dev/null || true)
+                active=$(systemctl is-active "$unit" 2>/dev/null || true)
+            fi
+            enabled=${enabled:-unknown}
+            active=${active:-unknown}
+            PREDICTED_ENABLED["$key"]=$enabled
+            PREDICTED_ACTIVE["$key"]=$active
         fi
-        enabled=${enabled:-unknown}
-        active=${active:-unknown}
-        changes=()
 
+        if [[ $enabled == not-found ]]; then
+            printf '    [dry-run] %s: unit not found -> real run would fail\n' "$unit"
+            continue
+        fi
+
+        changes=()
         case "$action" in
             enable)
                 [[ $enabled == enabled ]] || changes+=("enable")
                 if (( now )); then
                     [[ $active == active ]] || changes+=("start")
                 fi
+                PREDICTED_ENABLED["$key"]=enabled
+                if (( now )); then
+                    PREDICTED_ACTIVE["$key"]=active
+                fi
                 ;;
             disable)
                 [[ $enabled == disabled ]] || changes+=("disable")
+                if (( now )); then
+                    [[ $active == inactive ]] || changes+=("stop")
+                fi
+                PREDICTED_ENABLED["$key"]=disabled
+                if (( now )); then
+                    PREDICTED_ACTIVE["$key"]=inactive
+                fi
                 ;;
             start)
                 [[ $active == active ]] || changes+=("start")
+                PREDICTED_ACTIVE["$key"]=active
                 ;;
             stop)
                 [[ $active == inactive ]] || changes+=("stop")
+                PREDICTED_ACTIVE["$key"]=inactive
                 ;;
             restart)
                 changes+=("restart")
+                PREDICTED_ACTIVE["$key"]=active
                 ;;
             *)
                 changes+=("$action")
@@ -109,16 +143,19 @@ run_systemctl() {
 
 CONFIG="$(cd -- "$(dirname -- "$0")" && pwd)"
 CHEZMOI_CONFIG="$CONFIG/chezmoi/dot_config/chezmoi/chezmoi.toml"
+USER_NAME="${USER:-$(id -un)}"
+LOGIN_SHELL="${SHELL:-}"
 
 warn() { printf '    warn: %s\n' "$*" >&2; }
 
-if [ ! -f "$HOME/.ssh/ssh_fezjo" ]; then
-    if (( DRY_RUN )); then
-        warn "missing SSH identity: $HOME/.ssh/ssh_fezjo; skipping chezmoi preview"
-    else
-        echo "missing SSH identity: $HOME/.ssh/ssh_fezjo" >&2
-        exit 1
-    fi
+HAVE_SSH_KEY=0
+if [ -f "$HOME/.ssh/ssh_fezjo" ]; then
+    HAVE_SSH_KEY=1
+elif (( DRY_RUN )); then
+    warn "missing SSH identity: $HOME/.ssh/ssh_fezjo; skipping chezmoi preview (the real run would abort)"
+else
+    echo "missing SSH identity: $HOME/.ssh/ssh_fezjo" >&2
+    exit 1
 fi
 
 # DMS owns its colors/alttab/outputs/cursor fragments, not the keymap.
@@ -136,20 +173,30 @@ if command -v dms >/dev/null 2>&1; then
     done
 fi
 
-if [ -f "$HOME/.ssh/ssh_fezjo" ]; then
+if (( HAVE_SSH_KEY )); then
     chezmoi --config "$CHEZMOI_CONFIG" apply -n -S "$CONFIG/chezmoi" \
         || warn "chezmoi preview failed"
 fi
 
 if (( DRY_RUN )); then
-    printf '    [dry-run] chezmoi apply -S %s\n' "$CONFIG/chezmoi"
+    if (( HAVE_SSH_KEY )); then
+        printf '    [dry-run] chezmoi apply -S %s\n' "$CONFIG/chezmoi"
+    fi
 else
     echo "Apply chezmoi from '$CONFIG/chezmoi' to '$HOME' ?"
-    read -p "Press enter to continue"
+    if ! read -r -p "Apply? [Y/n] " reply; then
+        echo "aborted (no input)" >&2
+        exit 1
+    fi
+    case "${reply,,}" in
+        ""|y|yes) ;;
+        n|no) echo "aborted" >&2; exit 1 ;;
+        *) echo "please answer y or n" >&2; exit 1 ;;
+    esac
     chezmoi --config "$CHEZMOI_CONFIG" apply -S "$CONFIG/chezmoi"
 fi
 
-if [[ "$SHELL" != */fish ]]; then
+if [[ "$LOGIN_SHELL" != */fish ]]; then
     if command -v fish >/dev/null 2>&1; then
         run chsh -s "$(command -v fish)" || warn "could not change shell"
     fi
@@ -170,11 +217,12 @@ run sudo tailscale set --ssh || warn "tailscale ssh setup failed"
 # Bluetooth
 run_systemctl enable --now bluetooth.service || warn "bluetooth setup failed"
 
-# Keyboard, sudoers, logind, SysRq and OOM drop-ins
-# are installed by linux/system/apply.py before this script runs.
+# Keyboard, sudoers, logind, and SysRq settings are installed by
+# linux/system/apply.py before this script runs. OOM/sysctl tuning is
+# handled by 4-memory.sh.
 
 # Camera
-run sudo usermod -aG video "$USER" || warn "video group setup failed"
+run sudo usermod -aG video "$USER_NAME" || warn "video group setup failed"
 
 # Python
 run pipx ensurepath || warn "pipx ensurepath failed"
@@ -206,7 +254,7 @@ run_systemctl enable --now systemd-timesyncd || warn "systemd-timesyncd setup fa
 run_systemctl enable --now docker || warn "docker setup failed"
 for group in docker libvirt; do
     if getent group "$group" >/dev/null 2>&1; then
-        run sudo usermod -aG "$group" "$USER" || warn "could not add $USER to $group"
+        run sudo usermod -aG "$group" "$USER_NAME" || warn "could not add $USER_NAME to $group"
     fi
 done
 

@@ -47,9 +47,9 @@ windows/                         # kept
 Local checks: `make check` (bash/sh/zsh/fish syntax, JSON, Python syntax, and
 niri config).
 
-`setup.sh` runs the pre-install step, installs the package list, applies
-chezmoi, runs the memory setup, and applies system configuration. Run it as
-your user, not as root.
+`setup.sh` runs the pre-install step, installs the package list, configures
+memory, applies system files, runs the post-install step (chezmoi and
+services), and configures Timeshift. Run it as your user, not as root.
 
 Preview the whole flow without changing anything:
 
@@ -61,14 +61,17 @@ Each stage also supports `--dry-run` (`1-pre`, `2-install`, `3-post`) or an
 equivalent preview (`4-memory.sh --dry-run`, `system/apply.py --diff`,
 `system/timeshift.sh --dry-run`). The package stage splits its output into
 packages that would be installed, packages that would be updated, and a count
-of packages already up to date (which are not listed). `1-pre --dry-run` and
-`setup.sh --dry-run` still need sudo for the filtered `apply.py --diff`
-preview; setup also needs it for `4-memory.sh`.
+of packages already up to date (which are not listed). `1-pre --dry-run`,
+`2-install --dry-run`, `3-post --dry-run`, and `4-memory.sh --dry-run` do not
+need root. `setup.sh --dry-run` still runs the full `apply.py --diff` with sudo
+because some manifest targets, such as `/etc/sudoers.d`, are root-only.
 
 `1-pre_installation.sh` installs `reflector`, backs up
-`/etc/pacman.d/mirrorlist`, selects the 20 most recently synced HTTPS mirrors
-in Slovakia, Czechia, Austria, and Germany by download rate, and re-syncs before
-installing the bootstrap tools. Override `REFLECTOR_COUNTRIES` to change the
+`/etc/pacman.d/mirrorlist` once to
+`/etc/pacman.d/mirrorlist.bak-pre-reflector`, selects the 20 most recently
+synced HTTPS mirrors in Slovakia, Czechia, Austria, and Germany by download
+rate, and re-syncs before installing the bootstrap tools. If reflector fails,
+it restores the backup first. Override `REFLECTOR_COUNTRIES` to change the
 list; set it to an empty value to disable the country filter.
 
 It then installs `python` and applies only the pacman and makepkg entries from
@@ -102,6 +105,12 @@ sudo python3 linux/system/apply.py --apply
 # activation happens in 3-post_installation.sh
 ```
 
+`--apply` must run as root. `--plan`, `--diff`, and `--check` can run as your
+user, but need root to read root-only targets such as `/etc/sudoers.d`.
+Changed files are backed up under `/var/backups/configuration/<timestamp>/`
+with their original directory layout before the first write, so a failed
+backup cannot leave the manifest partially applied.
+
 `--filter REGEX` limits `--plan`, `--diff`, `--check`, and `--apply` to entries
 whose destination matches the regex; `--exclude REGEX` skips matches. Both are
 repeatable; `1-pre_installation.sh` filters `/etc/pacman.conf` and
@@ -110,9 +119,10 @@ full diff. Diffs are colored on a terminal by default; use `--color=always` or
 `--color=never` to override.
 
 It patches `pacman.conf`/`faillock.conf`, installs makepkg drop-ins, greetd
-config, keyd, sudoers, xkb, `dbg.h`, OOM drop-ins, and SysRq settings. The repo
-keeps no full-file copies of `pacman.conf`, `makepkg.conf`, or `faillock.conf`;
-the live files are patched or receive drop-ins.
+config, keyd, sudoers, xkb, `dbg.h`, and SysRq settings. OOM/sysctl tuning is
+handled by `4-memory.sh`. The repo keeps no full-file copies of
+`pacman.conf`, `makepkg.conf`, or `faillock.conf`; the live files are patched
+or receive drop-ins.
 
 Timeshift is configured from the current root/LUKS UUIDs:
 

@@ -13,9 +13,9 @@ check:
 	python3 -B -c 'import ast; ast.parse(open("linux/system/apply.py").read())'; \
 	if command -v niri >/dev/null 2>&1; then \
 		tmp=$$(mktemp -d); \
+		trap 'rm -rf "$$tmp"' EXIT; \
 		cp linux/chezmoi/dot_config/niri/config.kdl linux/chezmoi/dot_config/niri/binds.kdl "$$tmp/"; \
 		ln -s "$$HOME/.config/niri/dms" "$$tmp/dms"; \
 		niri validate -c "$$tmp/config.kdl" >/dev/null 2>&1; \
-		rm -rf "$$tmp"; \
 	fi; \
 	echo "checks passed"

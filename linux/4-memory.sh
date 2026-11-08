@@ -13,7 +13,7 @@
 #
 # Usage:
 #   sudo bash 4-memory.sh                 # apply (asks for confirmation)
-#   sudo bash 4-memory.sh --dry-run       # show what would change
+#   bash 4-memory.sh --dry-run            # show what would change
 #   sudo bash 4-memory.sh --yes           # no confirmation (for setup.sh)
 #   sudo bash 4-memory.sh --status        # print current state, change nothing
 #   sudo bash 4-memory.sh --rollback      # undo everything this script did
@@ -153,7 +153,8 @@ while (( $# )); do
   shift
 done
 
-if [[ "$MODE" != "status" ]]; then
+if [[ "$MODE" == "rollback" ]] \
+    || { [[ "$MODE" != "status" ]] && (( ! DRY_RUN )); }; then
   [[ $EUID -eq 0 ]] || die "must run as root (use sudo)"
 fi
 
@@ -316,7 +317,7 @@ do_rollback() {
   for f in \
     /etc/systemd/oomd.conf.d/60-local.conf \
     /etc/systemd/oomd/rules.d/desktop.oomrule \
-    /etc/systemd/user@.service.d/60-oom.conf \
+    /etc/systemd/system/user@.service.d/60-oom.conf \
     /etc/sysctl.d/90-memory.conf \
     /etc/systemd/system/dbus-broker.service.d/60-oom.conf \
     /etc/systemd/system/tailscaled.service.d/60-oom.conf
@@ -379,7 +380,7 @@ do_rollback() {
   fi
 
   if [[ -n "$TARGET_USER" ]]; then
-    runuser -u "$TARGET_USER" -- env XDG_RUNTIME_DIR="/run/user/$(id -u "$TARGET_USER")" \
+    run runuser -u "$TARGET_USER" -- env XDG_RUNTIME_DIR="/run/user/$(id -u "$TARGET_USER")" \
       systemctl --user daemon-reload >/dev/null 2>&1 || true
   fi
   run sysctl --system >/dev/null 2>&1 || true
@@ -449,10 +450,14 @@ fi
 # ------------------------------------------------------------- zram config
 info "Phase 1: zram"
 if [[ ! -f "$STATE_DIR/zram-generator.conf.orig" && -f /etc/systemd/zram-generator.conf ]]; then
-  run mkdir -p "$STATE_DIR"
-  (( DRY_RUN )) || chmod 700 "$STATE_DIR"
-  (( DRY_RUN )) || cp -a /etc/systemd/zram-generator.conf "$STATE_DIR/zram-generator.conf.orig"
-  ok "original zram config backed up"
+  if (( DRY_RUN )); then
+    printf '        [dry-run] back up /etc/systemd/zram-generator.conf\n'
+  else
+    mkdir -p "$STATE_DIR"
+    chmod 700 "$STATE_DIR"
+    cp -a /etc/systemd/zram-generator.conf "$STATE_DIR/zram-generator.conf.orig"
+    ok "original zram config backed up"
+  fi
 fi
 write_file /etc/systemd/zram-generator.conf <<EOF
 $MARK

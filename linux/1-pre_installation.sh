@@ -55,12 +55,17 @@ fi
 # rest of the bootstrap. Override the country list with REFLECTOR_COUNTRIES;
 # an empty value disables the country filter.
 REFLECTOR_COUNTRIES="${REFLECTOR_COUNTRIES:-sk,cz,at,de}"
+MIRRORLIST=/etc/pacman.d/mirrorlist
+MIRRORLIST_BACKUP=/etc/pacman.d/mirrorlist.bak-pre-reflector
 
 run sudo pacman -Syu --needed --noconfirm reflector
 
-if [[ -f /etc/pacman.d/mirrorlist ]]; then
-    run sudo cp -a /etc/pacman.d/mirrorlist \
-        "/etc/pacman.d/mirrorlist.bak-$(date +%Y%m%d-%H%M%S)"
+if [[ ! -f "$MIRRORLIST" ]]; then
+    printf '    skip mirrorlist backup (missing %s)\n' "$MIRRORLIST"
+elif [[ -f "$MIRRORLIST_BACKUP" ]]; then
+    printf '    skip mirrorlist backup (%s already exists)\n' "$MIRRORLIST_BACKUP"
+else
+    run sudo cp -a "$MIRRORLIST" "$MIRRORLIST_BACKUP"
 fi
 
 reflector_args=(
@@ -76,7 +81,13 @@ if [[ -n "$REFLECTOR_COUNTRIES" ]]; then
 fi
 
 if ! run sudo reflector "${reflector_args[@]}"; then
-    warn "reflector failed; keeping the existing mirrorlist"
+    warn "reflector failed; restoring the previous mirrorlist"
+    if [[ -f "$MIRRORLIST_BACKUP" ]]; then
+        run sudo cp -a "$MIRRORLIST_BACKUP" "$MIRRORLIST" \
+            || warn "could not restore $MIRRORLIST"
+    else
+        warn "no mirrorlist backup to restore"
+    fi
 fi
 
 # Re-sync from the selected mirrors before installing the bootstrap tools.
@@ -93,9 +104,13 @@ run sudo pacman -S --needed --noconfirm base-devel git mold rustup python
 # Use the same file/edit manifest as the rest of the system so the bootstrap
 # and final apply cannot drift apart. python is installed above for apply.py.
 if (( DRY_RUN )); then
-    sudo python3 "$SCRIPT_DIR/system/apply.py" --diff \
-        --filter '^/etc/pacman\.conf$' \
-        --filter '^/etc/makepkg\.conf\.d/'
+    if command -v python3 >/dev/null 2>&1; then
+        python3 "$SCRIPT_DIR/system/apply.py" --diff \
+            --filter '^/etc/pacman\.conf$' \
+            --filter '^/etc/makepkg\.conf\.d/'
+    else
+        warn "python3 is not installed; skipping the pacman/makepkg diff preview"
+    fi
 else
     sudo python3 "$SCRIPT_DIR/system/apply.py" --apply --yes \
         --filter '^/etc/pacman\.conf$' \
@@ -111,16 +126,15 @@ if ! command -v yay >/dev/null 2>&1; then
         printf '    [dry-run] git clone https://aur.archlinux.org/yay-bin.git\n'
         printf '    [dry-run] (cd yay-bin && makepkg -si --noconfirm)\n'
     else
-        tmpdir="$(mktemp -d)"
-
         (
+            tmpdir="$(mktemp -d)" || exit 1
+            trap 'rm -rf -- "${tmpdir:-}"' EXIT
+
             cd "$tmpdir"
             git clone https://aur.archlinux.org/yay-bin.git
             cd yay-bin
             makepkg -si --noconfirm
         )
-
-        rm -rf "$tmpdir"
     fi
 fi
 

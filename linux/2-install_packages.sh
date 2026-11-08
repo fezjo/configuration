@@ -32,7 +32,8 @@ fi
 [[ -f "$file" ]] || { echo "missing $file" >&2; exit 1; }
 
 mapfile -t pkgs < <(
-    sed 's/#.*//; s/^\s*//; s/\s*$//; /^-/d; /^\s*$/d; s/^+ //' "$file"
+    sed -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+        -e '/^-/d' -e '/^$/d' -e 's/^+[[:space:]]*//' "$file"
 )
 
 (( ${#pkgs[@]} )) || { echo "no packages in $file" >&2; exit 1; }
@@ -48,15 +49,22 @@ done
 pkgs=("${unique[@]}")
 
 if (( ! DRY_RUN )); then
+    if ! command -v yay >/dev/null 2>&1; then
+        echo "yay is not installed; run 1-pre_installation.sh first" >&2
+        exit 1
+    fi
     yay -S --needed --noconfirm "${pkgs[@]}"
     exit 0
 fi
 
 # Split the list into packages that are absent, upgradable, and up to date.
-declare -A installed=()
+# `pacman -T` resolves provides and virtual packages, so an installed provider
+# counts as satisfied just like it does for `pacman/yay --needed`.
+missing_output="$(pacman -T "${pkgs[@]}" 2>/dev/null || true)"
+declare -A missing=()
 while IFS= read -r pkg; do
-    [[ -n "$pkg" ]] && installed["$pkg"]=1
-done < <(pacman -Qq 2>/dev/null || true)
+    [[ -n "$pkg" ]] && missing["$pkg"]=1
+done <<< "$missing_output"
 
 if command -v yay >/dev/null 2>&1; then
     update_output="$(yay -Qu 2>/dev/null || true)"
@@ -76,7 +84,7 @@ uptodate=0
 for pkg in "${pkgs[@]}"; do
     if [[ -n ${updates[$pkg]:-} ]]; then
         update_pkgs+=("$pkg")
-    elif [[ -n ${installed[$pkg]:-} ]]; then
+    elif [[ -z ${missing[$pkg]:-} ]]; then
         ((uptodate += 1))
     else
         install_pkgs+=("$pkg")
