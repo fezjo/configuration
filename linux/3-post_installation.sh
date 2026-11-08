@@ -1,12 +1,16 @@
 #!/bin/bash
 
-#CONFIG=/home/fezjo/src/configuration/linux/
-CONFIG=$(pwd)
+CONFIG="$(cd -- "$(dirname -- "$0")" && pwd)"
 
 chezmoi apply -nv -S $CONFIG/chezmoi
 echo "Apply chezmoi from '$CONFIG/chezmoi' to '$HOME' ?"
 read -p "Press enter to continue"
 chezmoi apply -S $CONFIG/chezmoi
+
+if command -v setup-universal-clipboard >/dev/null 2>&1; then
+    setup-universal-clipboard || true
+fi
+
 
 if [[ "$SHELL" != */fish ]]; then
     if command -v fish >/dev/null 2>&1; then
@@ -14,22 +18,15 @@ if [[ "$SHELL" != */fish ]]; then
     fi
 fi
 
-fuck
-fuck
-
 mise use -g usage
 mise use -g node
 
 # Default applications
 xdg-mime default ssh.desktop x-scheme-handler/ssh
 
-# ZSwap
-sudo btrfs subvolume create /var/swap
-btrfs filesystem mkswapfile --size 32g --uuid clear /var/swap/swapfile
-sudo swapon /var/swap/swapfile
-echo "/swap/swapfile none swap defaults 0 0" | sudo tee -a /etc/fstab
-echo " zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=35" | sudo tee -a /etc/kernel/cmdline
-sudo reinstall-kernels
+# Memory: zram + swapfile overflow + systemd-oomd
+# (run by setup.sh as step 4; safe to re-run any time)
+# sudo bash "$CONFIG/4-memory.sh" --yes
 
 # Tailscale
 sudo systemctl enable --now tailscaled
@@ -39,13 +36,8 @@ sudo tailscale set --ssh
 # Bluetooth
 sudo systemctl enable --now bluetooth.service
 
-# Keyboard
-sudo cp $CONFIG/root/usr/share/X11/xkb/symbols/* /usr/share/X11/xkb/symbols/
-sudo cp $CONFIG/root/etc/keyd/default.conf /etc/keyd/
-sudo systemctl enable --now keyd
-sudo systemctl restarat keyd
-localectl set-x11-keymap us-sk_dia
-localectl
+# Keyboard, sudoers, logind, SysRq and OOM drop-ins
+# are installed by linux/system/apply.py before this script runs.
 
 # Camera
 sudo usermod -aG video $USER
@@ -54,14 +46,11 @@ sudo usermod -aG video $USER
 pipx ensurepath
 pypy3 -m ensurepip
 pypy3 -m pip install matplotlib
-uvx install input-tool shell-gpt xxh-xxh
+uv tool install input-tool shell-gpt xxh-xxh
 # good tools: pre-commit pur vermin
 
 # Cron
 sudo systemctl enable --now cronie
-
-# Battery
-systemctl enable --now --user batsignal
 
 # SSH
 sudo systemctl enable --now sshd
@@ -74,51 +63,40 @@ sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 sudo systemctl enable --now systemd-timesyncd
 
 # OOM
-sudo systemctl enable --now systemd-oomd
+# configured by 4-memory.sh and activated below.
 
 # Docker
 sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
 
-# Distrobox
-(
-repo=yay-bin
-setup="
-sudo pacman -S --needed --noconfirm git base-devel &&
-([ -d $repo ] &&
-  (cd $repo && pwd && git pull) ||
-  git clone https://aur.archlinux.org/yay-bin.git $repo
-) &&
-cd $repo &&
-makepkg -si --noconfirm &&
-yay -S --noconfirm fastfetch &&
-echo success
-"
-boxname=arch-test
-mkdir -p distrobox &&
-cd distrobox &&
-distrobox enter $boxname -- sh -c "$setup";
-)
+# System activation after system/apply.py
+sudo visudo -c
+sudo pacman-conf --config /etc/pacman.conf >/dev/null
+sudo systemctl daemon-reload
+sudo sysctl --system
+sudo localectl set-x11-keymap us-sk_dia
+sudo systemctl enable --now keyd
+sudo systemctl restart keyd
+sudo systemctl enable greetd
+sudo systemctl enable --now systemd-oomd.socket systemd-oomd.service
+
+# Distrobox test box: create it explicitly with `db new arch-test` when needed.
 
 # My projects
-mkdir ~/src
+mkdir -p "$HOME/src"
+if [ ! -d "$HOME/src/basrs/.git" ]; then
+    git clone https://github.com/fezjo/basrs.git "$HOME/src/basrs"
+fi
 (
-  cd ~/src
-  git clone https://github.com/fezjo/basrs.git
-  cd basrs
-  cargo install --path .
+    cd "$HOME/src/basrs"
+    cargo install --path .
 )
-
 
 cat <<EOF
 check that pacman-mirrors are ok
 setup locales
 pipx completions
 
-modify /etc/security/faillock.conf
-modify /etc/systemd/logind.conf.d/powerbutton.conf
-add things to /etc/dracut.conf.d/
-autologin
-
+system files are applied by system/apply.py
 setup timeshift
 EOF

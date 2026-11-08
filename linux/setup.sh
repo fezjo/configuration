@@ -1,5 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+cd -- "$(dirname -- "$0")"
 
-sh 1-pre_installation.sh
-sh 2-install_packages.sh
-sh 3-post_installation.sh
+bash 1-pre_installation.sh
+bash 2-install_packages.sh
+sudo bash 4-memory.sh --yes
+sudo python3 system/apply.py --apply --yes
+bash 3-post_installation.sh
+sudo bash system/timeshift.sh --yes

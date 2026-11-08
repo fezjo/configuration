@@ -48,23 +48,26 @@ sudo sed -i 's/^#Color/Color/' /etc/pacman.conf
 # -----------------------------
 # Chaotic AUR setup
 # -----------------------------
-if ! pacman-key --list-keys 3056513887B78AEB >/dev/null 2>&1; then
+if ! grep -q "^\[chaotic-aur\]" /etc/pacman.conf; then
+    sudo pacman-key --init
     sudo pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
     sudo pacman-key --lsign-key 3056513887B78AEB
-fi
 
-# Add chaotic-aur repo if missing
-if ! grep -q "^\[chaotic-aur\]" /etc/pacman.conf; then
-    echo -e "\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n" \
+    # Bootstrap the repo before adding it to pacman.conf.
+    sudo pacman -U --noconfirm \
+        'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' \
+        'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+
+    printf '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' \
         | sudo tee -a /etc/pacman.conf >/dev/null
 fi
 
-sudo pacman -Syu --needed --noconfirm chaotic-keyring chaotic-mirrorlist || true
+sudo pacman -Syu --needed --noconfirm
 
 # -----------------------------
 # Install essentials
 # -----------------------------
-sudo pacman -S --needed --noconfirm base-devel git mold rustup mold
+sudo pacman -S --needed --noconfirm base-devel git mold rustup
 rustup default stable
 
 sudo pacman -S --needed --noconfirm fish helix htop ghostty

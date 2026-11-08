@@ -245,14 +245,17 @@ Preferences:
 sudo ln -s /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme /usr/share/oh-my-zsh/themes/powerlevel10k.zsh-theme
 ```
 
-### Zram
+### Memory (zram + swap overflow + OOM)
 ```bash
-yay -S zram-generator zstd
-sudo echo '[zram0]\nzram-size = ram * 3\ncompression-algorithm = lz4\nswap-priority = 200\n' >/etc/systemd/zram-generator.conf
-systemctl daemon-reload
-sudo systemctl start /dev/zram0
-# don't forget to disable zswap using /etc/dracut.conf.d/...
+sudo bash 4-memory.sh --dry-run   # review
+sudo bash 4-memory.sh             # apply, reboot to resize zram
+sudo bash 4-memory.sh --status    # inspect
+sudo bash 4-memory.sh --rollback  # undo
 ```
+Sizing: zram = `min(max(4GiB, ram/4), 16GiB)`, disk swapfile = RAM/4 clamped to 2–8 GiB at
+priority 10 (zram is 100, so it fills first). btrfs gets a dedicated `@swap` subvolume so
+timeshift keeps working. systemd-oomd kills the leaf cgroup with the most reclaim activity
+and never the compositor/session units.
 
 ### ZSH
 ```bash

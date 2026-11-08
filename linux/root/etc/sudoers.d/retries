@@ -1,0 +1,2 @@
+# Number of password attempts sudo allows before giving up (default: 3).
+Defaults passwd_tries=5

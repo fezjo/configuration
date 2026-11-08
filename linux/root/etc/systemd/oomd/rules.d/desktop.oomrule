@@ -1,0 +1,7 @@
+# managed-by: 4-memory.sh
+# Kill the descendant cgroup doing the most reclaim (the browser/Electron
+# scope that is thrashing), not the whole session.
+[Rule]
+MemoryPressureAbove=55%
+Action=kill-by-pgscan
+LastingSec=15s

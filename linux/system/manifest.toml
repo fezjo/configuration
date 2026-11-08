@@ -1,0 +1,143 @@
+# File-only system manifest.
+#
+# apply.py handles only files and edits to existing files.
+# Service activation, localectl, sysctl loading, and other commands live in
+# 3-post_installation.sh.
+
+[[file]]
+src = "root/etc/keyd/default.conf"
+dest = "/etc/keyd/default.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/sudoers.d/retries"
+dest = "/etc/sudoers.d/retries"
+mode = "0440"
+
+[[file]]
+src = "root/etc/systemd/logind.conf.d/powerbutton.conf"
+dest = "/etc/systemd/logind.conf.d/powerbutton.conf"
+mode = "0644"
+
+[[file]]
+src = "root/usr/share/X11/xkb/symbols/us-sk_dia"
+dest = "/usr/share/X11/xkb/symbols/us-sk_dia"
+mode = "0644"
+
+[[file]]
+src = "root/usr/include/dbg.h"
+dest = "/usr/include/dbg.h"
+mode = "0644"
+
+[[file]]
+src = "root/etc/greetd/config.toml"
+dest = "/etc/greetd/config.toml"
+mode = "0644"
+
+[[file]]
+src = "root/etc/greetd/niri/config.kdl"
+dest = "/etc/greetd/niri/config.kdl"
+mode = "0644"
+
+[[file]]
+src = "root/etc/greetd/niri/dms.kdl"
+dest = "/etc/greetd/niri/dms.kdl"
+mode = "0644"
+
+[[file]]
+src = "root/etc/makepkg.conf.d/optimize.conf"
+dest = "/etc/makepkg.conf.d/optimize.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/makepkg.conf.d/rust.conf"
+dest = "/etc/makepkg.conf.d/rust.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/makepkg.conf.d/fortran.conf"
+dest = "/etc/makepkg.conf.d/fortran.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/systemd/oomd.conf.d/60-local.conf"
+dest = "/etc/systemd/oomd.conf.d/60-local.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/systemd/oomd/rules.d/desktop.oomrule"
+dest = "/etc/systemd/oomd/rules.d/desktop.oomrule"
+mode = "0644"
+
+[[file]]
+src = "root/etc/systemd/system/user@.service.d/60-oom.conf"
+dest = "/etc/systemd/system/user@.service.d/60-oom.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/systemd/system/dbus-broker.service.d/60-oom.conf"
+dest = "/etc/systemd/system/dbus-broker.service.d/60-oom.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/systemd/system/tailscaled.service.d/60-oom.conf"
+dest = "/etc/systemd/system/tailscaled.service.d/60-oom.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/sysctl.d/90-memory.conf"
+dest = "/etc/sysctl.d/90-memory.conf"
+mode = "0644"
+
+[[file]]
+src = "root/etc/sysctl.d/80-sysrq.conf"
+dest = "/etc/sysctl.d/80-sysrq.conf"
+mode = "0644"
+
+[[edit]]
+file = "/etc/pacman.conf"
+kind = "option"
+match = "^#?Color\\s*$"
+value = "Color"
+
+[[edit]]
+file = "/etc/pacman.conf"
+kind = "option"
+match = "^#?CheckSpace\\s*$"
+value = "CheckSpace"
+
+[[edit]]
+file = "/etc/pacman.conf"
+kind = "option"
+match = "^#?ILoveCandy\\s*$"
+value = "ILoveCandy"
+
+[[edit]]
+file = "/etc/pacman.conf"
+kind = "option"
+match = "^#?ParallelDownloads\\s*=.*"
+value = "ParallelDownloads = 10"
+
+[[edit]]
+file = "/etc/pacman.conf"
+kind = "option"
+match = "^#?DownloadUser\\s*=.*"
+value = "DownloadUser = alpm"
+
+[[edit]]
+file = "/etc/pacman.conf"
+kind = "section"
+name = "multilib"
+include = "Include = /etc/pacman.d/mirrorlist"
+
+[[edit]]
+file = "/etc/pacman.conf"
+kind = "section"
+name = "chaotic-aur"
+include = "Include = /etc/pacman.d/chaotic-mirrorlist"
+
+[[edit]]
+file = "/etc/security/faillock.conf"
+kind = "value"
+match = "^#?\\s*deny\\s*=.*"
+value = "deny = 5"

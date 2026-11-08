@@ -1,0 +1,10 @@
+[terminal]
+vt = 1
+
+[default_session]
+command = "agreety --cmd niri-session"
+user = "greeter"
+
+[initial_session]
+command = "niri-session"
+user = "fezjo"
