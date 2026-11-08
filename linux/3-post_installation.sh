@@ -11,6 +11,17 @@ if [ ! -f "$HOME/.ssh/ssh_fezjo" ]; then
     exit 1
 fi
 
+# DMS owns its colors/alttab/outputs/cursor fragments, not the keymap.
+# Deploy defaults only when a fragment is missing so theme updates survive.
+if command -v dms >/dev/null 2>&1; then
+    for fragment in colors alttab outputs cursor; do
+        if [ ! -f "$HOME/.config/niri/dms/$fragment.kdl" ]; then
+            dms setup "$fragment" </dev/null >/dev/null 2>&1 \
+                || warn "dms setup $fragment failed"
+        fi
+    done
+fi
+
 chezmoi --config "$CHEZMOI_CONFIG" apply -n -S "$CONFIG/chezmoi"
 echo "Apply chezmoi from '$CONFIG/chezmoi' to '$HOME' ?"
 read -p "Press enter to continue"

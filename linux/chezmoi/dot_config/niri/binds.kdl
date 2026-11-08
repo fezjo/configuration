@@ -1,0 +1,224 @@
+// niri keybinds, included from config.kdl.
+// DMS's generated dms/binds.kdl is intentionally not included; DMS panel
+// actions and hardware keys are curated here.
+
+binds {
+    // Applications and windows
+    Mod+Return repeat=false { spawn "ghostty"; }
+    Mod+Shift+Q repeat=false { close-window; }
+
+    // Mod+D and Mod+O open the niri overview. Typing there opens the DMS launcher.
+    Mod+O repeat=false { toggle-overview; }
+    Mod+D repeat=false { toggle-overview; }
+
+    // Focus
+    Mod+Left  { focus-column-left; }
+    Mod+Down  { focus-window-down; }
+    Mod+Up    { focus-window-up; }
+    Mod+Right { focus-column-right; }
+    Mod+H     { focus-column-left; }
+    Mod+J     { focus-window-down; }
+    Mod+K     { focus-window-up; }
+    Mod+L     { focus-column-right; }
+
+    // Move window or column
+    Mod+Ctrl+Left  { move-column-left; }
+    Mod+Ctrl+Down  { move-window-down; }
+    Mod+Ctrl+Up    { move-window-up; }
+    Mod+Ctrl+Right { move-column-right; }
+    Mod+Ctrl+H     { move-column-left; }
+    Mod+Ctrl+J     { move-window-down; }
+    Mod+Ctrl+K     { move-window-up; }
+    Mod+Ctrl+L     { move-column-right; }
+
+    // Column ends
+    Mod+Home { focus-column-first; }
+    Mod+End  { focus-column-last; }
+    Mod+Ctrl+Home { move-column-to-first; }
+    Mod+Ctrl+End  { move-column-to-last; }
+
+    // Monitors
+    Mod+Shift+Left  { focus-monitor-left; }
+    Mod+Shift+Down  { focus-monitor-down; }
+    Mod+Shift+Up    { focus-monitor-up; }
+    Mod+Shift+Right { focus-monitor-right; }
+    Mod+Shift+H     { focus-monitor-left; }
+    Mod+Shift+J     { focus-monitor-down; }
+    Mod+Shift+K     { focus-monitor-up; }
+    Mod+Shift+L     { focus-monitor-right; }
+
+    // Move column to monitor
+    Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
+    Mod+Shift+Ctrl+H     { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+J     { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
+
+    // Workspaces
+    Mod+Page_Down      { focus-workspace-down; }
+    Mod+Page_Up        { focus-workspace-up; }
+    Mod+U              { focus-workspace-down; }
+    Mod+I              { focus-workspace-up; }
+    Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
+    Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
+    Mod+Ctrl+U         { move-column-to-workspace-down; }
+    Mod+Ctrl+I         { move-column-to-workspace-up; }
+
+    Mod+Shift+Page_Down { move-workspace-down; }
+    Mod+Shift+Page_Up   { move-workspace-up; }
+    Mod+Shift+U         { move-workspace-down; }
+    Mod+Shift+I         { move-workspace-up; }
+
+    // Mouse wheel
+    // These follow the natural-scroll setting. cooldown-ms rate-limits the
+    // wheel binds so workspace scrolling does not run away.
+    Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
+    Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
+
+    Mod+WheelScrollRight      { focus-column-right; }
+    Mod+WheelScrollLeft       { focus-column-left; }
+    Mod+Ctrl+WheelScrollRight { move-column-right; }
+    Mod+Ctrl+WheelScrollLeft  { move-column-left; }
+
+    // Usually scrolling up and down with Shift in applications results in
+    // horizontal scrolling; these binds replicate that.
+    Mod+Shift+WheelScrollDown      { focus-column-right; }
+    Mod+Shift+WheelScrollUp        { focus-column-left; }
+    Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
+    Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
+
+    // Workspace numbers
+    // The number row targets workspaces 2-10.
+    Mod+1 { focus-workspace 2; }
+    Mod+2 { focus-workspace 3; }
+    Mod+3 { focus-workspace 4; }
+    Mod+4 { focus-workspace 5; }
+    Mod+5 { focus-workspace 6; }
+    Mod+6 { focus-workspace 7; }
+    Mod+7 { focus-workspace 8; }
+    Mod+8 { focus-workspace 9; }
+    Mod+9 { focus-workspace 10; }
+    Mod+Ctrl+1 { move-column-to-workspace 2; }
+    Mod+Ctrl+2 { move-column-to-workspace 3; }
+    Mod+Ctrl+3 { move-column-to-workspace 4; }
+    Mod+Ctrl+4 { move-column-to-workspace 5; }
+    Mod+Ctrl+5 { move-column-to-workspace 6; }
+    Mod+Ctrl+6 { move-column-to-workspace 7; }
+    Mod+Ctrl+7 { move-column-to-workspace 8; }
+    Mod+Ctrl+8 { move-column-to-workspace 9; }
+    Mod+Ctrl+9 { move-column-to-workspace 10; }
+
+    // Columns
+    // Consume or expel the focused window left/right.
+    Mod+BracketLeft  { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+
+    // Consume one window from the right to the bottom of the focused column.
+    Mod+Comma  { consume-window-into-column; }
+    // Expel the bottom window from the focused column to the right.
+    Mod+Period { expel-window-from-column; }
+
+    // Width and height
+    // Cycle the preset column widths (1/3, 1/2, 2/3).
+    Mod+R { switch-preset-column-width; }
+    // Cycle niri's window-height presets. Reverse width cycling is
+    // intentionally not bound so Mod+Shift+R can cycle heights.
+    Mod+Shift+R { switch-preset-window-height; }
+    Mod+Ctrl+R { reset-window-height; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+
+    // Expand the focused column to space not taken up by other fully visible
+    // columns, making it fill the rest of the space.
+    Mod+Ctrl+F { expand-column-to-available-width; }
+
+    // Center the focused column (Mod+C was reassigned to clipboard copy).
+    Mod+Shift+C { center-column; }
+    // Center all fully visible columns on screen.
+    Mod+Ctrl+C { center-visible-columns; }
+
+    // Finer width adjustments: 1% per press.
+    // set-column-width also accepts pixels ("1000"), pixel deltas ("-5"/"+5"),
+    // and percentages ("25%"/"-10%"/"+10%"). Sizes use logical, scaled pixels.
+    Mod+Minus { set-column-width "-1%"; }
+    Mod+Equal { set-column-width "+1%"; }
+
+    // Finer height adjustments when in a column with other windows: 10% per press.
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    // Clipboard
+    // Universal copy/paste sends Ctrl+Shift+C/V to terminals and Ctrl+C/V to
+    // GUI apps. Mod+Alt+V opens the DMS clipboard history.
+    Mod+C { spawn-sh "$HOME/.local/bin/universal-clipboard copy"; }
+    Mod+V { spawn-sh "$HOME/.local/bin/universal-clipboard paste"; }
+    Mod+Alt+V { spawn "dms" "ipc" "call" "clipboard" "toggle"; }
+
+    // DMS panel actions (Mod+Alt)
+    Mod+Alt+Space { spawn "dms" "ipc" "call" "launcher" "toggle"; }
+    Mod+Alt+N { spawn "dms" "ipc" "call" "notifications" "toggle"; }
+    Mod+Alt+M { spawn "dms" "ipc" "call" "processlist" "focusOrToggle"; }
+    Mod+Alt+S { spawn "dms" "ipc" "call" "settings" "focusOrToggle"; }
+    Mod+Alt+W { spawn "dms" "ipc" "call" "dankdash" "wallpaper"; }
+    Mod+Alt+L { spawn "dms" "ipc" "call" "lock" "lock"; }
+    Mod+Alt+P { spawn "dms" "ipc" "call" "powermenu" "toggle"; }
+    Mod+Alt+R { spawn "dms" "ipc" "call" "workspace-rename" "open"; }
+    Mod+Alt+E { spawn "dms" "ipc" "call" "notepad" "toggle"; }
+    Mod+Alt+Shift+W { spawn "dms" "ipc" "call" "window-rules" "toggle"; }
+    // DMS task manager, same key as stock DMS.
+    Ctrl+Alt+Delete { spawn "dms" "ipc" "call" "processlist" "focusOrToggle"; }
+
+    // Hardware keys, active while locked.
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "increment" "3"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "decrement" "3"; }
+    XF86AudioMute allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "mute"; }
+    XF86AudioMicMute allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "micmute"; }
+    XF86AudioPlay allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "playPause"; }
+    XF86AudioPause allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "playPause"; }
+    XF86AudioNext allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "next"; }
+    XF86AudioPrev allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "previous"; }
+    Ctrl+XF86AudioRaiseVolume allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "increment" "3"; }
+    Ctrl+XF86AudioLowerVolume allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "decrement" "3"; }
+    XF86MonBrightnessUp allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "increment" "5" ""; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "decrement" "5" ""; }
+
+    // Floating and tiling
+    Mod+Space       { toggle-window-floating; }
+    Mod+Shift+Space { switch-focus-between-floating-and-tiling; }
+
+    // Tabbed columns
+    // Windows in the column appear as vertical tabs instead of stacking.
+    Mod+W { toggle-column-tabbed-display; }
+
+    // Screenshots
+    Print { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Mod+Print { screenshot-window; }
+
+    // Session and power
+    // Remote-desktop clients can request that niri stop processing shortcuts.
+    // This escape hatch toggles that inhibitor so a buggy client cannot hold
+    // the session hostage.
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+
+    // The quit action shows a confirmation dialog to avoid accidental exits.
+    Mod+Shift+E { quit; }
+
+    // Powers off the monitors. Any input turns them back on.
+    Mod+Shift+P { power-off-monitors; }
+}
+
+// Recent-window switcher on Alt+Tab; niri's default config does not bind this.
+recent-windows {
+    binds {
+        Alt+Tab         { next-window scope="output"; }
+        Alt+Shift+Tab   { previous-window scope="output"; }
+        Alt+grave       { next-window filter="app-id"; }
+        Alt+Shift+grave { previous-window filter="app-id"; }
+    }
+}

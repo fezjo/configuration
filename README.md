@@ -89,6 +89,39 @@ It writes `/etc/timeshift/timeshift.json`; create the first snapshot with
 `sudo timeshift --create --comments initial`. Home is intentionally not
 included in snapshots.
 
+## niri and DMS
+
+niri owns the entire keymap. All keybinds live in
+`~/.config/niri/binds.kdl`, which `config.kdl` includes. `dms/binds.kdl` is
+intentionally not included:
+DMS still provides the bar, launcher, clipboard, notifications, and other
+services, but its generated keybinds are ignored. DMS actions are curated in
+the niri config under `Mod+Alt`:
+
+- `Mod+Alt+V` clipboard history
+- `Mod+Alt+Space` launcher
+- `Mod+Alt+N` notifications
+- `Mod+Alt+M` process list
+- `Mod+Alt+S` settings
+- `Mod+Alt+W` wallpaper
+- `Mod+Alt+L` lock
+- `Mod+Alt+P` power menu
+- `Mod+Alt+R` rename workspace
+- `Mod+Alt+E` notepad
+- `Mod+Alt+Shift+W` window rules
+
+DMS still generates `~/.config/niri/dms/{colors,alttab,outputs,cursor}.kdl`.
+Those are included with `optional=true`, so niri starts even before DMS has
+deployed them. On a fresh install `3-post_installation.sh` runs `dms setup`
+for missing fragments only.
+
+`Mod+D` opens the niri overview. Typing there opens the DMS launcher because
+DMS watches the overview state and uses `niriOverviewOverlayEnabled` plus
+`niriOverviewLauncherStyle` (both default to enabled/full). Those are DMS
+settings, not niri bindings. Do not use `dms keybinds` to change shortcuts: it
+writes `dms/binds.kdl`, which this config does not load. Edit the niri config
+instead.
+
 ## Universal clipboard
 
 `Mod+C` and `Mod+V` send the focused application's native shortcuts:
