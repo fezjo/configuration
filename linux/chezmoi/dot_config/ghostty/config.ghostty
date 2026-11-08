@@ -1,3 +1,2 @@
 config-file = ?config.dank
-config-file = ?config.dank.local
 config-file = ?config.local
