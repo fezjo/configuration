@@ -1,0 +1,7 @@
+{
+  "name": "timeline-emphasis",
+  "private": true,
+  "exports": {
+    "./gui-experimental": "./gui-experimental.cjs"
+  }
+}

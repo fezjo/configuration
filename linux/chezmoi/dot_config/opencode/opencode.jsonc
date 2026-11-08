@@ -1,0 +1,47 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Make this the default model for new sessions:
+  // "model": "openrouter/cheap-deepseek-v4.1-flash",
+
+  "providers": {
+    "openrouter": {
+      // Ask OpenRouter for the cheapest upstream provider that meets the
+      // throughput floor. A number is the p50 threshold; use { "p90": 40 }
+      // for a stricter floor.
+      "body": {
+        "provider": {
+          "sort": "price",
+          "preferred_min_throughput": 40
+        }
+      },
+      "models": {
+        "cheap-deepseek-v4.1-flash": {
+          "modelID": "deepseek/deepseek-v4.1-flash-1017",
+          "name": "Cheap DeepSeek V4.1 Flash",
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": {
+              "supported": true,
+              "effort": ["none", "low", "high", "max"]
+            }
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 393216
+          },
+          "cost": {
+            "input": 0.15,
+            "output": 0.6,
+            "cache": {
+              "read": 0.003,
+              "write": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}
