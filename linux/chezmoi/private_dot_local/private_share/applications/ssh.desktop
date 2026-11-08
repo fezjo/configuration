@@ -1,9 +1,9 @@
 [Desktop Entry]
 Version=1.0
 Name=SSH URL Handler
-Comment=Login to SSH URLs in terminal
-Exec=bash -c "notify-send $TERM %u"
-Terminal=true
+Comment=Login to SSH URLs in a terminal
+Exec=/home/fezjo/.local/bin/ssh-url-handler %u
+Terminal=false
 Type=Application
 Categories=System;TerminalEmulator;
 Icon=utilities-terminal

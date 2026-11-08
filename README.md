@@ -35,14 +35,21 @@ windows/                         # kept
 ## Install
 
 1. Boot the Arch ISO and run `archinstall --config linux/archinstall-no_disk_user.json`.
-   Select the disk and user in the TUI. The config pre-fills the rest.
-2. First boot: clone this repository and run `sudo bash linux/setup.sh`.
+   Select the disk in the TUI. The user is prefilled as `fezjo`; if you need a
+   different name, replace all occurrences before running archinstall — the TUI
+   user alone is not enough.
+2. First boot: clone this repository and run `bash linux/setup.sh`.
 
-Local checks: `make check` (bash/sh/zsh/fish syntax, JSON, and niri config when
-the generated DMS fragments are present).
+   The archinstall user is hardcoded as `fezjo` in the JSON, greetd config, and
+   custom commands. Replace that string if you want another account. Change the
+   hostname and the throwaway password hash in the TUI before installing.
+
+Local checks: `make check` (bash/sh/zsh/fish syntax, JSON, Python syntax, and
+niri config).
 
 `setup.sh` runs the pre-install step, installs the package list, applies
-chezmoi, runs the memory setup, and applies system configuration.
+chezmoi, runs the memory setup, and applies system configuration. Run it as
+your user, not as root.
 
 ## Environment
 
@@ -58,9 +65,9 @@ individual shell files.
 `linux/system/apply.py` is file-only and reads `manifest.toml`:
 
 ```bash
-python3 linux/system/apply.py --plan
-python3 linux/system/apply.py --diff
-python3 linux/system/apply.py --check
+sudo python3 linux/system/apply.py --plan
+sudo python3 linux/system/apply.py --diff
+sudo python3 linux/system/apply.py --check
 sudo python3 linux/system/apply.py --apply
 # activation happens in 3-post_installation.sh
 ```
@@ -94,9 +101,6 @@ where the application supports them.
 
 `Mod+Alt+V` opens the DMS clipboard history.
 
-`setup-universal-clipboard` removes DMS's default `Mod+V` binding so niri can own
-the key. `3-post_installation.sh` runs it after chezmoi.
-
 The old niri `Mod+C` column-center action is now `Mod+Shift+C`.
 
 ## OOM and SysRq
@@ -113,12 +117,16 @@ The old niri `Mod+C` column-center action is now `Mod+Shift+C`.
 
 ## Secrets
 
-`.config/Code/User/settings.json` is ignored by chezmoi because it contains
-extension API keys. Do not run a blanket `chezmoi add ~/.config`.
+`.config/Code/User/settings.json` is ignored because the live file is
+application-managed and may contain extension API keys. Do not run a blanket
+`chezmoi add ~/.config`.
 
 `.ssh/config` and `.ssh/known_hosts` are stored as age-encrypted chezmoi files.
 The age identity lives outside the repository at `~/.config/age/keys.txt`.
-Install `age` from the package list on new machines.
+Copy it from a trusted backup before running `setup.sh`; it is not stored here.
+Install `age` from the package list on new machines. The deployed chezmoi
+config expects the repository at `~/src/configuration`; change `sourceDir` if
+you clone elsewhere.
 
 Note that earlier git history still contains the old plaintext SSH files; the
 encryption protects the current tree, not historical commits.

@@ -10,8 +10,8 @@ check:
 	zsh -n linux/chezmoi/dot_zshenv; \
 	for f in $$(find linux/chezmoi -name '*.fish'); do fish --no-execute "$$f"; done; \
 	python3 -m json.tool linux/archinstall-no_disk_user.json >/dev/null; \
-	python3 -m py_compile linux/system/apply.py; \
-	if command -v niri >/dev/null 2>&1 && [ -d "$$HOME/.config/niri/dms" ]; then \
+	python3 -B -c 'import ast; ast.parse(open("linux/system/apply.py").read())'; \
+	if command -v niri >/dev/null 2>&1; then \
 		tmp=$$(mktemp -d); \
 		cp linux/chezmoi/dot_config/niri/config.kdl "$$tmp/config.kdl"; \
 		ln -s "$$HOME/.config/niri/dms" "$$tmp/dms"; \

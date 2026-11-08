@@ -59,8 +59,10 @@
 
 # System
 + linux
++ linux-headers
 + linux-firmware
 + linux-lts
++ linux-lts-headers
 ## Base tools
 + arch-install-scripts
 + base

@@ -8,6 +8,8 @@
 
 HISTSIZE=100000
 HISTFILESIZE=200000
+HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/bash/history"
+mkdir -p "${HISTFILE%/*}"
 HISTCONTROL=ignoreboth:erasedups
 shopt -s histappend checkwinsize autocd globstar
 

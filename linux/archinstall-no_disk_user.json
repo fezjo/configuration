@@ -34,9 +34,7 @@
             "username": "fezjo",
             "sudo": true,
             "groups": [
-                "video",
-                "docker",
-                "libvirt"
+                "video"
             ],
             "enc_password": "$6$hGyvUhJMvfmjS7PR$ogjbK39dsNjan7xSZouQpPN4Ouq1.8W4Nt254K/H9Upc8Z8dJ0xAgeNd6nQA9.se98Eo6p18FKIgtwadakAuD."
         }

@@ -301,8 +301,10 @@ do_rollback() {
 
   if (( foreign_swap )); then
     skip "leaving pre-existing swap $fs_swapfile alone"
-  elif [[ -f "$fs_swapfile" ]]; then
+  elif (( created_swapfile )) && [[ -f "$fs_swapfile" ]]; then
     run swapoff "$fs_swapfile" 2>/dev/null && ok "swapoff $fs_swapfile" || skip "$fs_swapfile not active"
+  elif [[ -f "$fs_swapfile" ]]; then
+    skip "$fs_swapfile existed before this script; leaving it active"
   fi
   if (( oomd_was_enabled )); then
     skip "systemd-oomd was already enabled before setup; leaving it"
@@ -662,14 +664,19 @@ EOF
 
   run systemctl daemon-reload
   run systemctl enable --now systemd-oomd.socket systemd-oomd.service
+  run systemctl restart systemd-oomd.service
   if (( HAVE_RULES )) && ! (( DRY_RUN )); then
     systemctl set-property "user@$(id -u "$TARGET_USER").service" OOMRules=desktop 2>/dev/null \
       || warn "OOMRules applies on next login"
   fi
-  runuser -u "$TARGET_USER" -- env XDG_RUNTIME_DIR="/run/user/$(id -u "$TARGET_USER")" \
-    systemctl --user daemon-reload >/dev/null 2>&1 \
-    && ok "user manager reloaded" \
-    || { (( DRY_RUN )) || warn "log out/in to apply the protect list"; }
+  if (( DRY_RUN )); then
+    printf '    [dry-run] runuser -u %s -- systemctl --user daemon-reload\n' "$TARGET_USER"
+  else
+    runuser -u "$TARGET_USER" -- env XDG_RUNTIME_DIR="/run/user/$(id -u "$TARGET_USER")" \
+      systemctl --user daemon-reload >/dev/null 2>&1 \
+      && ok "user manager reloaded" \
+      || warn "log out/in to apply the protect list"
+  fi
 else
   info "Phase 4: systemd-oomd skipped"
 fi

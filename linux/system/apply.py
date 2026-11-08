@@ -15,13 +15,14 @@ import sys
 import tomllib
 from datetime import datetime
 from pathlib import Path
+from typing import NoReturn
 
 BASE = Path(__file__).resolve().parent
 LINUX = BASE.parent
 DEFAULT_MANIFEST = BASE / "manifest.toml"
 
 
-def die(message: str) -> "NoReturn":
+def die(message: str) -> NoReturn:
     print(f"error: {message}", file=sys.stderr)
     raise SystemExit(2)
 
@@ -117,7 +118,12 @@ def file_state(entry: dict) -> tuple[bool, str, str | None]:
     if not src.is_file():
         die(f"missing source {src}")
 
-    dest_bytes = dest.read_bytes() if dest.is_file() else b""
+    try:
+        dest_bytes = dest.read_bytes() if dest.is_file() else b""
+    except PermissionError:
+        die(f"cannot read {dest}; run as root to inspect it")
+    except OSError as exc:
+        die(f"cannot read {dest}: {exc}")
     src_bytes = src.read_bytes()
     content_changed = dest_bytes != src_bytes
     mode_changed = dest.is_file() and (dest.stat().st_mode & 0o7777) != mode
@@ -169,7 +175,7 @@ def backup(dest: Path, backup_root: Path) -> None:
     shutil.copy2(dest, target)
 
 
-def apply_actions(manifest: dict, backup_root: Path) -> int:
+def apply_actions(manifest: dict, backup_root: Path, backup_enabled: bool) -> int:
     changes = 0
     for entry in manifest.get("file", []):
         src = LINUX / entry["src"]
@@ -179,7 +185,8 @@ def apply_actions(manifest: dict, backup_root: Path) -> int:
         if not changed:
             continue
         changes += 1
-        backup(dest, backup_root)
+        if backup_enabled:
+            backup(dest, backup_root)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dest)
         os.chmod(dest, mode)
@@ -190,7 +197,8 @@ def apply_actions(manifest: dict, backup_root: Path) -> int:
         if not changed:
             continue
         changes += 1
-        backup(dest, backup_root)
+        if backup_enabled:
+            backup(dest, backup_root)
         old_mode = dest.stat().st_mode & 0o7777
         text = read_text(dest)
         assert text is not None
@@ -215,6 +223,9 @@ def main() -> int:
     if not (args.plan or args.diff or args.check or args.apply):
         args.plan = True
 
+    if os.geteuid() != 0:
+        die("run as root; apply.py inspects 0440 files such as /etc/sudoers.d")
+
     manifest = load_manifest(args.manifest)
     actions = collect(manifest)
     changed = [a for a in actions if a[1]]
@@ -236,9 +247,6 @@ def main() -> int:
         print(f"{len(changed)} change(s)")
         return 1 if changed else 0
 
-    if os.geteuid() != 0:
-        die("--apply must run as root")
-
     if not changed:
         print("no changes")
         return 0
@@ -250,7 +258,7 @@ def main() -> int:
 
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     backup_root = Path("/var/backups/configuration") / stamp
-    count = apply_actions(manifest, backup_root)
+    count = apply_actions(manifest, backup_root, not args.no_backup)
     print(f"applied {count} change(s)")
     if not args.no_backup:
         print(f"backups: {backup_root}")

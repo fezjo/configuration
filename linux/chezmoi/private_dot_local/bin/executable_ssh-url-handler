@@ -1,0 +1,39 @@
+#!/bin/sh
+# Open ssh://[user@]host[:port][/path] in a terminal.
+set -eu
+
+raw=${1:?usage: ssh-url-handler ssh://host}
+raw=${raw#ssh://}
+
+# Strip a path component if present.
+raw=${raw%%/*}
+
+user=""
+if [ "${raw#*@}" != "$raw" ]; then
+    user=${raw%%@*}
+    raw=${raw#*@}
+fi
+
+port=""
+if [ "${raw#*:}" != "$raw" ]; then
+    port=${raw##*:}
+    host=${raw%%:*}
+else
+    host=$raw
+fi
+
+case "$port" in
+    ''|*[!0-9]*) [ -z "$port" ] || { echo "invalid port: $port" >&2; exit 1; } ;;
+esac
+
+if [ -n "$user" ]; then
+    target="$user@$host"
+else
+    target=$host
+fi
+
+if [ -n "$port" ]; then
+    exec ghostty -e ssh -p "$port" "$target"
+else
+    exec ghostty -e ssh "$target"
+fi

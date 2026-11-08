@@ -24,7 +24,6 @@ x-scheme-handler/https=zen.desktop;
 audio/x-m4b=mpv.desktop;
 
 [Default Applications]
-application/*=claude-code-url-handler.desktop;
 application/epub+zip=com.github.babluboy.bookworm.desktop;
 application/pdf=org.gnome.Evince.desktop;
 application/vnd.comicbook+zip=org.gnome.Evince.desktop;
@@ -60,9 +59,10 @@ text/html=zen.desktop;
 video/*=mpv.desktop;
 x-scheme-handler/chrome=zen.desktop;
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop;
-x-scheme-handler/discord=vesktop.desktop
+x-scheme-handler/discord=vesktop.desktop;
 x-scheme-handler/http=zen.desktop;
 x-scheme-handler/https=zen.desktop;
-x-scheme-handler/opencode=ai.opencode.desktop.desktop
+x-scheme-handler/ssh=ssh.desktop;
+x-scheme-handler/opencode=ai.opencode.desktop.desktop;
 x-scheme-handler/terminal=com.mitchellh.ghostty.desktop;
-x-scheme-handler/slack=slack.desktop
+x-scheme-handler/slack=slack.desktop;

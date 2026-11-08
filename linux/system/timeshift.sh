@@ -85,11 +85,6 @@ sed -i -E \
     -e 's|"include_btrfs_home"[[:space:]]*:[[:space:]]*"[^"]*"|"include_btrfs_home" : "false"|' \
     -e 's|"include_btrfs_home_for_backup"[[:space:]]*:[[:space:]]*"[^"]*"|"include_btrfs_home_for_backup" : "false"|' \
     -e 's|"include_btrfs_home_for_restore"[[:space:]]*:[[:space:]]*"[^"]*"|"include_btrfs_home_for_restore" : "false"|' \
-    -e 's|"schedule_boot"[[:space:]]*:[[:space:]]*"[^"]*"|"schedule_boot" : "true"|' \
-    -e 's|"schedule_hourly"[[:space:]]*:[[:space:]]*"[^"]*"|"schedule_hourly" : "true"|' \
-    -e 's|"schedule_daily"[[:space:]]*:[[:space:]]*"[^"]*"|"schedule_daily" : "true"|' \
-    -e 's|"schedule_weekly"[[:space:]]*:[[:space:]]*"[^"]*"|"schedule_weekly" : "true"|' \
-    -e 's|"schedule_monthly"[[:space:]]*:[[:space:]]*"[^"]*"|"schedule_monthly" : "true"|' \
     "$tmp"
 
 if (( DRY_RUN )); then
@@ -98,6 +93,9 @@ if (( DRY_RUN )); then
     exit 0
 fi
 
+if [[ -f "$TARGET" ]] && ! cmp -s "$tmp" "$TARGET"; then
+    cp -a "$TARGET" "$TARGET.bak-$(date +%Y%m%d-%H%M%S)"
+fi
 install -Dm0644 "$tmp" "$TARGET"
 run systemctl enable --now cronie
 ok "wrote $TARGET"

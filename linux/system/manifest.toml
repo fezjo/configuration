@@ -131,12 +131,6 @@ name = "multilib"
 include = "Include = /etc/pacman.d/mirrorlist"
 
 [[edit]]
-file = "/etc/pacman.conf"
-kind = "section"
-name = "chaotic-aur"
-include = "Include = /etc/pacman.d/chaotic-mirrorlist"
-
-[[edit]]
 file = "/etc/security/faillock.conf"
 kind = "value"
 match = "^#?\\s*deny\\s*=.*"
