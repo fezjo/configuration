@@ -1,0 +1,3 @@
+# Temporarily do not apply this target.
+# Code settings contain extension API keys.
+.config/Code/User/settings.json
