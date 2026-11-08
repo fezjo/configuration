@@ -122,11 +122,11 @@ application-managed and may contain extension API keys. Do not run a blanket
 `chezmoi add ~/.config`.
 
 `.ssh/config` and `.ssh/known_hosts` are stored as age-encrypted chezmoi files.
-The age identity lives outside the repository at `~/.config/age/keys.txt`.
-Copy it from a trusted backup before running `setup.sh`; it is not stored here.
-Install `age` from the package list on new machines. The deployed chezmoi
-config expects the repository at `~/src/configuration`; change `sourceDir` if
-you clone elsewhere.
+The age recipient is the public key from `~/.ssh/ssh_fezjo.pub`; decryption
+uses the private key `~/.ssh/ssh_fezjo`. Copy that key from a trusted backup
+before running `setup.sh`; it is not stored here. Install `age` from the package
+list on new machines. The deployed chezmoi config expects the repository at
+`~/src/configuration`; change `sourceDir` if you clone elsewhere.
 
 Note that earlier git history still contains the old plaintext SSH files; the
 encryption protects the current tree, not historical commits.

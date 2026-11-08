@@ -6,8 +6,8 @@ CHEZMOI_CONFIG="$CONFIG/chezmoi/dot_config/chezmoi/chezmoi.toml"
 
 warn() { printf '    warn: %s\n' "$*" >&2; }
 
-if [ ! -f "$HOME/.config/age/keys.txt" ]; then
-    echo "missing age identity: $HOME/.config/age/keys.txt" >&2
+if [ ! -f "$HOME/.ssh/ssh_fezjo" ]; then
+    echo "missing SSH identity: $HOME/.ssh/ssh_fezjo" >&2
     exit 1
 fi
 
