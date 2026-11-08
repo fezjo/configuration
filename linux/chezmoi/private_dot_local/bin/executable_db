@@ -52,7 +52,7 @@ create_distrobox() {
   fi
 
   mkdir -p distrobox
-  distrobox create --name "$boxname" --image "$distro:latest" --home "/home/fezjo/distrobox/${boxname}-home/" --yes
+  distrobox create --name "$boxname" --image "$distro:latest" --home "$HOME/distrobox/${boxname}-home/" --yes
   cd distrobox
   distrobox enter "$boxname" -- sh -c "$setup"
 }

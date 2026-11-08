@@ -1,0 +1,5 @@
+gtk-titlebar = false
+font-family = IosevkaTerm Nerd Font
+working-directory = home
+window-inherit-working-directory = false
+theme = dankcolors

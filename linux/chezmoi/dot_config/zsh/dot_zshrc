@@ -1,40 +1,53 @@
-#
-# ~/.zshrc
-#
+# Interactive zsh configuration.
 
-# If not running interactively, don't do anything
-[[ -z "$PS1" ]] && return
+[[ -o interactive ]] || return
 
-# Aliases
-alias ls='ls --color=auto'
-alias ll='ls -lah --color=auto'
-alias grep='grep --color=auto'
+# Also load here in case ZDOTDIR was preset and ~/.zshenv was not read.
+. "$HOME/.config/shell/env.sh"
+. "$HOME/.config/shell/aliases.sh"
+. "$HOME/.config/shell-config.sh"
 
-# Enable word-by-word deletion with Ctrl+Backspace and Ctrl+Delete
+HISTSIZE=100000
+SAVEHIST=100000
+setopt hist_ignore_all_dups hist_reduce_blanks share_history inc_append_history
+setopt autocd extendedglob interactivecomments no_beep
+
+autoload -Uz compinit && compinit
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' menu select
+
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
 bindkey '^H' backward-kill-word
-bindkey '^[3;5~' kill-word
+bindkey '^[[3;5~' kill-word
+bindkey '^[[1;5C' forward-word
+bindkey '^[[1;5D' backward-word
 
-# Source ~/.profile if it exists (same as in bashrc)
-[[ -f ~/.profile ]] && source ~/.profile
-[[ -f ~/.config/shell-config.sh ]] && source ~/.config/shell-config.sh ".config/zsh/.zshrc"
-
-# Git branch function for prompt, with parentheses
-parse_git_branch() {
-    local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-    if [[ -n "$branch" ]]; then
-        echo "($branch)"
-    fi
-}
-
-# Custom prompt with git branch in parentheses
-autoload -U colors && colors
+autoload -Uz vcs_info
+precmd() { vcs_info }
+zstyle ':vcs_info:git:*' formats ' (%b)'
 setopt prompt_subst
+PROMPT='%F{green}%n@%m%f:%F{blue}%2~%f%F{yellow}${vcs_info_msg_0_}%f%# '
 
-# Git branch function within prompt
-export PS1="%F{green}%n@%m%f:%F{blue}%~%f%F{yellow}\$(parse_git_branch)%f\$ "
+if [[ -t 0 ]]; then
+    export GPG_TTY=$(tty)
+fi
 
-# Command history settings
-HISTSIZE=10000
-SAVEHIST=20000
-HISTCONTROL=ignoreboth
-setopt append_history
+if command -v fzf >/dev/null 2>&1; then
+    if fzf --zsh >/dev/null 2>&1; then
+        source <(fzf --zsh)
+    elif [[ -r /usr/share/fzf/key-bindings.zsh ]]; then
+        source /usr/share/fzf/key-bindings.zsh
+    fi
+fi
+
+# Optional plugins, if installed.
+for f in \
+    /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh \
+    /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh \
+    /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh; do
+    [[ -r "$f" ]] && source "$f"
+done

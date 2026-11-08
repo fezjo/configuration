@@ -1,0 +1,16 @@
+#!/bin/sh
+# Prepare the universal Mod+C / Mod+V clipboard bindings.
+set -eu
+
+for cmd in niri jq wtype; do
+    command -v "$cmd" >/dev/null 2>&1 || {
+        echo "missing dependency: $cmd" >&2
+        exit 1
+    }
+done
+
+# DMS defaults bind Mod+V to its clipboard UI. Remove that default so niri's
+# universal paste binding can own the key.
+if command -v dms >/dev/null 2>&1; then
+    dms keybinds remove niri Mod+V >/dev/null 2>&1 || true
+fi

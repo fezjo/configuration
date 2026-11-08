@@ -11,7 +11,7 @@
 [cola]
 	spellcheck = false
 [core]
-	excludesFile = /home/fezjo/.config/git/gitignore
+	excludesFile = ~/.config/git/gitignore
 	pager = delta
     untrackedCache = true
 [credential "https://github.com"]

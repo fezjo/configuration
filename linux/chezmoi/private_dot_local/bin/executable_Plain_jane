@@ -1,42 +1,30 @@
-#!/usr/bin/sh
+#!/bin/sh
+# Lock the session, suspend, and play a song while it stays locked.
 
-# requirements: lockd, suspend, song, sox, Pulseaudio-ctl
-lockd=i3lock
-suspend="I3exit suspend"
-song="~/Music/A\$AP Ferg - Plain Jane (Audio)-BwmuvqFzfLI.opus"
+song="$HOME/Music/A\$AP Ferg - Plain Jane (Audio)-BwmuvqFzfLI.opus"
 
-# lock (using lockd) and suspend
-eval $suspend
+command -v pamixer >/dev/null 2>&1 || exit 1
+command -v mpv >/dev/null 2>&1 || exit 1
+[ -f "$song" ] || exit 1
 
-get_time="date +%s%N"
-time_prev=10000000000000000000
-while true; do
-  time_curr=$($get_time)
-#  echo $(echo "$time_curr-$time_prev" | bc)
-  if (( time_curr - time_prev > 1000000000 )); then
-    break
-  fi
-  sleep 0.1
-  time_prev=$time_curr
+volume=$(pamixer --get-volume 2>/dev/null || echo 50)
+pamixer --set-volume 100 --unmute >/dev/null 2>&1
+
+loginctl lock-session 2>/dev/null || dms ipc call lock lock 2>/dev/null || true
+systemctl suspend 2>/dev/null || true
+
+session="${XDG_SESSION_ID:-}"
+locked() {
+    [ -n "$session" ] || return 1
+    [ "$(loginctl show-session "$session" -p LockedHint --value 2>/dev/null)" = "yes" ]
+}
+
+mpv --no-video --loop=inf --shuffle --really-quiet "$song" >/dev/null 2>&1 &
+pid=$!
+while kill -0 "$pid" 2>/dev/null; do
+    locked || break
+    sleep 1
 done
-
-sleep 10
-
-volume_level=$(Pulseaudio-ctl full-status | cut -d " " -f1)
-Pulseaudio-ctl set 100
-
-song_length=$(sox "$song" -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9.]*\)$#\1#p')
-while true; do
-  song_start=$(head -200 /dev/urandom | cksum | cut -f1 -d " " | awk -v song_length="$song_length" '{print $1 % song_length}')
-  play "$song" trim $song_start >/dev/null 2>&1 &
-  play_pid=$!
-  while kill -0 $play_pid 2> /dev/null; do
-    if ! pgrep $lockd >/dev/null 2>&1; then
-      break 2
-    fi
-    sleep 0.1
-  done
-done
-
-kill $play_pid
-Pulseaudio-ctl set $volume_level
+kill "$pid" 2>/dev/null || true
+wait "$pid" 2>/dev/null || true
+pamixer --set-volume "$volume" >/dev/null 2>&1

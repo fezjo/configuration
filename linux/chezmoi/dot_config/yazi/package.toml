@@ -3,5 +3,10 @@ use = "yazi-rs/plugins:smart-enter"
 rev = "d1c8baa"
 hash = "56fdabc96fc1f4d53c96eb884b02a5be"
 
+[[plugin.deps]]
+use = "DragoshiUk/gif-autoplay"
+rev = "5fcbde4"
+hash = "bfdd60fb0b8ae09334afaac1550c3a6d"
+
 [flavor]
 deps = []

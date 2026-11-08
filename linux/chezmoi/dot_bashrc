@@ -1,34 +1,42 @@
-#
 # ~/.bashrc
-#
 
-# If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-alias ls='ls --color=auto'
-alias ll='ls -lah --color=auto'
-alias grep='grep --color=auto'
+. "$HOME/.config/shell/env.sh"
+. "$HOME/.config/shell/aliases.sh"
+. "$HOME/.config/shell-config.sh"
 
-# Enable word-by-word deletion with Ctrl+Backspace and Ctrl+Delete
+HISTSIZE=100000
+HISTFILESIZE=200000
+HISTCONTROL=ignoreboth:erasedups
+shopt -s histappend checkwinsize autocd globstar
+
+PROMPT_DIRTRIM=2
+parse_git_branch() {
+    git rev-parse --abbrev-ref HEAD 2>/dev/null | sed 's/^/ (/; s/$/)/'
+}
+PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[33m\]$(parse_git_branch)\[\033[00m\]\$ '
+
+# Readline: prefix history and word movement.
+bind '"\e[A": history-search-backward'
+bind '"\e[B": history-search-forward'
 bind '"\C-h": backward-kill-word'
 bind '"\e[3;5~": kill-word'
+bind '"\e[1;5C": forward-word'
+bind '"\e[1;5D": backward-word'
+bind 'set completion-ignore-case on'
+bind 'set show-all-if-ambiguous on'
+bind 'set menu-complete-display-prefix on'
 
-[[ -f ~/.profile ]] && . ~/.profile ".bashrc"
-[[ -f ~/.config/shell-config.sh ]] && source ~/.config/shell-config.sh ".bashrc"
-
-if command -v git >/dev/null 2>&1; then
-    parse_git_branch() {
-        git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
-    }
-else
-    parse_git_branch() {
-        echo ""
-    }
+if command -v fzf >/dev/null 2>&1; then
+    if fzf --bash >/dev/null 2>&1; then
+        eval "$(fzf --bash)"
+    elif [ -r /usr/share/fzf/key-bindings.bash ]; then
+        . /usr/share/fzf/key-bindings.bash
+    fi
 fi
-export PS1="\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[33m\]\$(parse_git_branch)\[\033[00m\]\$ "
 
-# Command history settings
-HISTSIZE=10000
-HISTFILESIZE=20000
-HISTCONTROL=ignoreboth
-shopt -s histappend
+if [ -t 0 ]; then
+    GPG_TTY=$(tty)
+    export GPG_TTY
+fi

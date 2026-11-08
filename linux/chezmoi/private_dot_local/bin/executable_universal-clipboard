@@ -1,0 +1,44 @@
+#!/bin/sh
+# Universal copy/paste by sending the focused application's native shortcuts.
+# Terminals use Ctrl+Shift+C/V; GUI apps use Ctrl+C/V.
+set -eu
+
+action=${1:-}
+case "$action" in
+    copy|paste) ;;
+    *) echo "usage: universal-clipboard copy|paste" >&2; exit 1 ;;
+esac
+
+for cmd in niri jq wtype; do
+    command -v "$cmd" >/dev/null 2>&1 || {
+        echo "missing dependency: $cmd" >&2
+        exit 1
+    }
+done
+
+app=$(niri msg --json focused-window 2>/dev/null | jq -r '.app_id // empty' 2>/dev/null || true)
+
+case "$app" in
+    com.mitchellh.ghostty|foot|kitty|org.wezfurlong.wezterm|Alacritty|alacritty)
+        terminal=1
+        ;;
+    *)
+        terminal=0
+        ;;
+esac
+
+if [ "$terminal" -eq 1 ]; then
+    mods="-M ctrl -M shift"
+    unmods="-m shift -m ctrl"
+else
+    mods="-M ctrl"
+    unmods="-m ctrl"
+fi
+
+if [ "$action" = copy ]; then
+    key=c
+else
+    key=v
+fi
+
+exec wtype $mods -k "$key" $unmods

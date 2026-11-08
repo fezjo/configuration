@@ -1,33 +1,24 @@
-#!/bin/bash
+# Integrations shared by bash and zsh. Source after the environment.
+if [ -n "${BASH_VERSION:-}" ]; then
+    __shell=bash
+elif [ -n "${ZSH_VERSION:-}" ]; then
+    __shell=zsh
+else
+    return 0 2>/dev/null || exit 0
+fi
 
-export ENV_PROFILES="$ENV_PROFILES\n($(date))>by $1>shell-config.sh>start"
-
-SHELLNAME=$(basename "$(ps -p $$ -o comm=)")
-
-[[ -d /opt/homebrew ]] && eval "$(/opt/homebrew/bin/brew shellenv $SHELLNAME)"
-
-function y() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		builtin cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
-}
-
-eval "$(mise activate $SHELLNAME)"
-
-# NOTE: this takes a long time (~150ms)
-eval "$(thefuck --alias)"
-
-eval "$(zoxide init $SHELLNAME)"
-
-export PYENV_ROOT="$HOME/.local/share/pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PATH:$PYENV_ROOT/bin"
-# eval "$(pyenv init -)"
-
-# eval "$(antidot init)"
-
-export GPG_TTY=$(tty)
-
-export ENV_PROFILES="$ENV_PROFILES\n($(date))>by $1>shell-config.sh>end"
+if command -v mise >/dev/null 2>&1; then
+    eval "$(mise activate "$__shell")"
+fi
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init "$__shell")"
+fi
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+    SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+    export SSH_AUTH_SOCK
+fi
+if [ -t 0 ]; then
+    GPG_TTY=$(tty)
+    export GPG_TTY
+fi
+unset __shell
