@@ -28,6 +28,85 @@ run() {
     "$@"
 }
 
+run_systemctl() {
+    local -a args=("$@")
+    local user=0
+    if [[ ${args[0]:-} == --user ]]; then
+        user=1
+        args=("${args[@]:1}")
+    fi
+
+    if (( ! DRY_RUN )); then
+        if (( user )); then
+            systemctl --user "${args[@]}"
+        else
+            sudo systemctl "${args[@]}"
+        fi
+        return
+    fi
+
+    local action=${args[0]:-}
+    local now=0
+    local -a units=()
+    local arg
+    for arg in "${args[@]:1}"; do
+        case "$arg" in
+            --now) now=1 ;;
+            -*) ;;
+            *) units+=("$arg") ;;
+        esac
+    done
+
+    if (( ${#units[@]} == 0 )); then
+        printf '    [dry-run] systemctl %s\n' "${args[*]}"
+        return
+    fi
+
+    local unit enabled active changes
+    for unit in "${units[@]}"; do
+        if (( user )); then
+            enabled=$(systemctl --user is-enabled "$unit" 2>/dev/null || true)
+            active=$(systemctl --user is-active "$unit" 2>/dev/null || true)
+        else
+            enabled=$(systemctl is-enabled "$unit" 2>/dev/null || true)
+            active=$(systemctl is-active "$unit" 2>/dev/null || true)
+        fi
+        enabled=${enabled:-unknown}
+        active=${active:-unknown}
+        changes=()
+
+        case "$action" in
+            enable)
+                [[ $enabled == enabled ]] || changes+=("enable")
+                if (( now )); then
+                    [[ $active == active ]] || changes+=("start")
+                fi
+                ;;
+            disable)
+                [[ $enabled == disabled ]] || changes+=("disable")
+                ;;
+            start)
+                [[ $active == active ]] || changes+=("start")
+                ;;
+            stop)
+                [[ $active == inactive ]] || changes+=("stop")
+                ;;
+            restart)
+                changes+=("restart")
+                ;;
+            *)
+                changes+=("$action")
+                ;;
+        esac
+
+        if (( ${#changes[@]} == 0 )); then
+            printf '    [dry-run] %s: %s, %s -> no change\n' "$unit" "$enabled" "$active"
+        else
+            printf '    [dry-run] %s: %s, %s -> %s\n' "$unit" "$enabled" "$active" "${changes[*]}"
+        fi
+    done
+}
+
 CONFIG="$(cd -- "$(dirname -- "$0")" && pwd)"
 CHEZMOI_CONFIG="$CONFIG/chezmoi/dot_config/chezmoi/chezmoi.toml"
 
@@ -84,12 +163,12 @@ run mise use -g node || warn "mise node setup failed"
 # sudo bash "$CONFIG/4-memory.sh" --yes
 
 # Tailscale
-run sudo systemctl enable --now tailscaled || warn "tailscaled setup failed"
+run_systemctl enable --now tailscaled || warn "tailscaled setup failed"
 run sudo tailscale up || warn "tailscale up failed"
 run sudo tailscale set --ssh || warn "tailscale ssh setup failed"
 
 # Bluetooth
-run sudo systemctl enable --now bluetooth.service || warn "bluetooth setup failed"
+run_systemctl enable --now bluetooth.service || warn "bluetooth setup failed"
 
 # Keyboard, sudoers, logind, SysRq and OOM drop-ins
 # are installed by linux/system/apply.py before this script runs.
@@ -105,26 +184,26 @@ run uv tool install input-tool shell-gpt xxh-xxh || warn "uv tool install failed
 # good tools: pre-commit pur vermin
 
 # Cron
-run sudo systemctl enable --now cronie || warn "cronie setup failed"
+run_systemctl enable --now cronie || warn "cronie setup failed"
 
 # SSH agent socket
-run systemctl --user enable --now ssh-agent.socket || warn "ssh-agent socket setup failed"
+run_systemctl --user enable --now ssh-agent.socket || warn "ssh-agent socket setup failed"
 
 # SSH
-run sudo systemctl enable --now sshd || warn "sshd setup failed"
+run_systemctl enable --now sshd || warn "sshd setup failed"
 
 # DNS
-run sudo systemctl enable --now systemd-resolved || warn "systemd-resolved setup failed"
+run_systemctl enable --now systemd-resolved || warn "systemd-resolved setup failed"
 run sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
 # Time
-run sudo systemctl enable --now systemd-timesyncd || warn "systemd-timesyncd setup failed"
+run_systemctl enable --now systemd-timesyncd || warn "systemd-timesyncd setup failed"
 
 # OOM
 # configured by 4-memory.sh and activated below.
 
 # Docker / libvirt groups
-run sudo systemctl enable --now docker || warn "docker setup failed"
+run_systemctl enable --now docker || warn "docker setup failed"
 for group in docker libvirt; do
     if getent group "$group" >/dev/null 2>&1; then
         run sudo usermod -aG "$group" "$USER" || warn "could not add $USER to $group"
@@ -141,11 +220,11 @@ fi
 run sudo systemctl daemon-reload
 run sudo sysctl --system
 run sudo localectl set-x11-keymap us-sk_dia
-run sudo systemctl enable --now keyd
-run sudo systemctl restart keyd
-run sudo systemctl enable greetd
-run sudo systemctl enable --now systemd-oomd.socket systemd-oomd.service
-run sudo systemctl restart systemd-oomd.service
+run_systemctl enable --now keyd
+run_systemctl restart keyd
+run_systemctl enable greetd
+run_systemctl enable --now systemd-oomd.socket systemd-oomd.service
+run_systemctl restart systemd-oomd.service
 
 # Distrobox test box: create it explicitly with `db new arch-test` when needed.
 

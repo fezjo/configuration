@@ -28,6 +28,8 @@ run() {
     "$@"
 }
 
+warn() { printf '    warn: %s\n' "$*" >&2; }
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 
 # -----------------------------
@@ -47,9 +49,42 @@ if ! grep -q "^\[chaotic-aur\]" /etc/pacman.conf \
 fi
 
 # -----------------------------
+# Mirror selection
+# -----------------------------
+# Upgrade and install reflector first, then use the fast HTTPS mirrors for the
+# rest of the bootstrap. Override the country list with REFLECTOR_COUNTRIES;
+# an empty value disables the country filter.
+REFLECTOR_COUNTRIES="${REFLECTOR_COUNTRIES:-sk,cz,at,de}"
+
+run sudo pacman -Syu --needed --noconfirm reflector
+
+if [[ -f /etc/pacman.d/mirrorlist ]]; then
+    run sudo cp -a /etc/pacman.d/mirrorlist \
+        "/etc/pacman.d/mirrorlist.bak-$(date +%Y%m%d-%H%M%S)"
+fi
+
+reflector_args=(
+    --latest 20
+    --protocol https
+    --sort rate
+    --connection-timeout 5
+    --download-timeout 5
+    --save /etc/pacman.d/mirrorlist
+)
+if [[ -n "$REFLECTOR_COUNTRIES" ]]; then
+    reflector_args+=(--country "$REFLECTOR_COUNTRIES")
+fi
+
+if ! run sudo reflector "${reflector_args[@]}"; then
+    warn "reflector failed; keeping the existing mirrorlist"
+fi
+
+# Re-sync from the selected mirrors before installing the bootstrap tools.
+run sudo pacman -Syu --needed --noconfirm
+
+# -----------------------------
 # Bootstrap tools
 # -----------------------------
-run sudo pacman -Syu --needed --noconfirm
 run sudo pacman -S --needed --noconfirm base-devel git mold rustup python
 
 # -----------------------------

@@ -65,10 +65,20 @@ of packages already up to date (which are not listed). `1-pre --dry-run` and
 `setup.sh --dry-run` still need sudo for the filtered `apply.py --diff`
 preview; setup also needs it for `4-memory.sh`.
 
-`1-pre_installation.sh` installs `python`, then applies only the pacman and
-makepkg entries from `system/manifest.toml` through `system/apply.py
---filter`. This means `2-install_packages.sh` runs with the final pacman and
-makepkg configuration instead of ad-hoc `sed`/`cp` edits.
+`1-pre_installation.sh` installs `reflector`, backs up
+`/etc/pacman.d/mirrorlist`, selects the 20 most recently synced HTTPS mirrors
+in Slovakia, Czechia, Austria, and Germany by download rate, and re-syncs before
+installing the bootstrap tools. Override `REFLECTOR_COUNTRIES` to change the
+list; set it to an empty value to disable the country filter.
+
+It then installs `python` and applies only the pacman and makepkg entries from
+`system/manifest.toml` through `system/apply.py --filter`. This means
+`2-install_packages.sh` runs with the final pacman and makepkg configuration
+instead of ad-hoc `sed`/`cp` edits.
+
+`3-post --dry-run` checks `systemctl is-enabled` and `systemctl is-active` and
+reports the predicted enable/start/restart state changes instead of printing
+the raw commands.
 
 ## Environment
 
