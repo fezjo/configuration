@@ -20,6 +20,18 @@ render = true
 [keys.normal]
 X = "extend_line_above"
 D = "delete_char_backward"
+C-y = [
+  ':sh rm -f /tmp/files2open',
+  ':set mouse false',
+  ':insert-output yazi "%{buffer_name}" --chooser-file=/tmp/files2open',
+  ':insert-output echo "\x1b[?1049h\x1b[?2004h" > /dev/tty',
+  ':redraw',
+  ':set mouse true',
+  ':open /tmp/files2open',
+  'select_all',
+  'split_selection_on_newline',
+  'goto_file',
+]
 
 [keys.normal.space]
 q = ":quit"

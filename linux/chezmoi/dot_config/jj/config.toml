@@ -1,0 +1,66 @@
+# [experimental-advance-branches]
+# enabled-branches = ["glob:*"]
+# disabled-branches = ["master", "main", "glob:push-*"]
+
+[template-aliases]
+prompt2 = '''
+surround("(", ")",
+separate(
+  " ",
+  bookmarks.join(", "),
+  change_id.shortest(4),
+  commit_id.shortest(4),
+  if(conflict, label("conflict", "×")),
+  if(divergent, label("divergent", "??")),
+  if(hidden, label("hidden prefix", "(hidden)")),
+  if(immutable, label("node immutable", "◆")),
+  coalesce(
+      if(
+          empty,
+          coalesce(
+              if(
+                  parents.len() > 1,
+                  label("empty", "(merged)"),
+              ),
+              label("empty", "(empty)"),
+          ),
+      ),
+  ),
+  label("description placeholder", truncate_end(45, description.first_line(), "…"))
+))
+'''
+
+[user]
+name = "Jozef Číž"
+email = "jozef.ciz.ml@gmail.com"
+
+[git]
+private-remote-bookmarks = true
+
+[snapshot]
+auto-track = "none()"
+
+[remotes.claude]
+auto-track-bookmarks = "glob:fezjo/*"
+
+[aliases]
+opush = ["git", "push", "--remote", "origin", "--bookmark"]
+
+[templates]
+log_node = "if(current_working_copy, '★', '○')"
+
+[ui]
+default-command = "log"
+pager = "bash -c 'f=$(mktemp); cat > $f; rg -q ★ $f && exec less -FRX -j.2 -p ★ $f || exec less -FRX $f; rm -f $f'"
+
+[revset-aliases]
+"immutable_heads()" = "trunk() | tags() | (remote_bookmarks() ~ mine())"
+"around(x)" = "::x | x::"
+"problematic_only()" = "(conflicts() | divergent()) & mutable()"
+"problematic()" = "ancestors(problematic_only(), 3) | descendants(problematic_only(), 3)"
+"backlog()" = 'bookmarks(glob:"fezjo/backlog/*")'
+"hidden_backlog()" = "::backlog() ~ ::(visible_heads() ~ backlog())"
+
+[revsets]
+log = "@ | trunk() | problematic_only() | (ancestors(mine() & mutable(), 2) & visible() & author_date(before:'3 months ago')..)"
+# log = "@ | trunk() | problematic_only() | (ancestors(mine() & ~::trunk(), 2) & visible() & author_date(before:'3 months ago')..) & ~hidden_backlog()"

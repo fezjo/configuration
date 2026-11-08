@@ -228,6 +228,7 @@
 + zed # rust
 ## Version Control
 + git
++ jujutsu # jj
 + bliss # gitignore
 + difftastic
 - gitbutler-bin

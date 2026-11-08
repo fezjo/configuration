@@ -5,7 +5,7 @@ desc = "Open $SHELL here"
 
 [[mgr.prepend_keymap]]
 on  = [ "<C-n>" ]
-run = '''shell -- ripdrag -r %s'''
+run = '''shell 'ripdrag -r $@' --confirm'''
 
 [[mgr.prepend_keymap]]
 on   = [ "l" ]
