@@ -10,6 +10,9 @@ pacman-mirrors -f 0
 ILoveCandy
 enable multilib
 
+/etc/sudoers.d/retries
+Defaults passwd_tries=5
+
 sudo pacman -S nemo gprename
 sudo tee /usr/local/bin/gprename-nemo <<'EOB'
 #!/bin/bash
