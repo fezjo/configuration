@@ -1,0 +1,7 @@
+{
+  "name": "message-actions",
+  "private": true,
+  "exports": {
+    "./gui-experimental": "./gui-experimental.cjs"
+  }
+}
