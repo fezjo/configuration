@@ -48,9 +48,9 @@ show_cheatsheet = false
 # `umbriel outputs`.
 # https://docs.noctalia.dev/umbriel/configuration/#events
 #
-# [events]
-# lid_close = "umbriel msg output-disable eDP-1"
-# lid_open = "umbriel msg output-enable eDP-1"
+[events]
+lid_close = "umbriel msg output-disable eDP-1"
+lid_open = "umbriel msg output-enable eDP-1"
 
 # ==============================================================================
 # Screencast
@@ -433,20 +433,11 @@ default_extent_fraction = 0.5
 # windows stacked beside it; Mod+Shift+J/K move a tab out of its group or a
 # window into one. Click, scroll, or drag a title to switch, reorder, or pull it
 # out.
-# [layout.tabs]
-# default_display = "normal"
-# new_tab_position = "after_active"
-# middle_click_closes = true
-#
-# [appearance.tab_bar]
-# style = "titles"         # "indicator" draws thin slots without titles
-# height = 24
-# gap = -1                 # space between bar and window; -1 follows layout.gap
-# font = "sans 10"
-# visible = true           # false hides every bar; tabs keep working
-# hide_when_single = false
-# max_tabs = 6            # show at most 6 slots; more tabs scroll
-# overflow = "scroll"      # or "shrink" to fit every tab
+[layout.tabs]
+middle_click_closes = true
+
+[appearance.tab_bar]
+hide_when_single = true
 
 # ==============================================================================
 # Window rules
@@ -458,6 +449,25 @@ default_extent_fraction = 0.5
 # moves anything behind them.
 [[window_rule]]
 blur = true
+
+# Float common utility and dialog-style applications.
+[[window_rule]]
+match.app_id = [
+  "^org[.]pulseaudio[.]pavucontrol$",
+  "^nm-connection-editor$",
+  "^blueman-manager$",
+  "^galculator$",
+  "^org[.]gnome[.]Calculator$",
+  "^it[.]catboy[.]ripdrag$",
+]
+default_floating = true
+default_floating_size = { width = 0.5, height = 0.6 }
+
+# Frame the window being shared; viewers never see the frame.
+[[window_rule]]
+match.is_cast_target = true
+border_color_focused = "#40C057FF"
+border_color_unfocused = "#40C057FF"
 
 [[window_rule]]
 match.app_id = "^dev.noctalia.Noctalia$"
