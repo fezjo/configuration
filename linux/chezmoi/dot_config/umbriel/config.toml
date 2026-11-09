@@ -42,6 +42,15 @@ show_cheatsheet = false
 # attach_modal_dialogs = false
 
 # ==============================================================================
+# Environment
+# These apply to Umbriel and commands started in its session. Changes require
+# an Umbriel restart.
+# https://docs.noctalia.dev/umbriel/configuration/#environment
+#
+[environment]
+ELECTRON_OZONE_PLATFORM_HINT = "auto"
+
+# ==============================================================================
 # Lid events
 # Remove the laptop panel from the desktop while the lid is closed, then
 # restore it when the lid opens. Replace eDP-1 with the name from
@@ -49,8 +58,8 @@ show_cheatsheet = false
 # https://docs.noctalia.dev/umbriel/configuration/#events
 #
 [events]
-lid_close = "umbriel msg output-disable eDP-1"
-lid_open = "umbriel msg output-enable eDP-1"
+lid_close = "sh -c '$HOME/.local/bin/umbriel-lid close'"
+lid_open = "sh -c '$HOME/.local/bin/umbriel-lid open'"
 
 # ==============================================================================
 # Screencast

@@ -1,0 +1,47 @@
+#!/bin/sh
+# Handle the laptop lid without breaking logind's suspend behavior.
+#
+# With an external display connected:
+#   close -> disable the internal panel
+#   open  -> re-enable it
+# Without an external display, do nothing and let systemd-logind suspend.
+set -eu
+
+action=${1:-}
+case "$action" in
+    close|open) ;;
+    *) echo "usage: $0 close|open" >&2; exit 1 ;;
+esac
+
+internal=
+external=
+for status in /sys/class/drm/card*-*/status; do
+    [ -r "$status" ] || continue
+    [ "$(cat "$status")" = connected ] || continue
+
+    connector=${status%/status}
+    connector=${connector##*/}
+
+    case "$connector" in
+        *-eDP-*|*-LVDS-*|*-DSI-*)
+            internal=${connector#*-}
+            ;;
+        *)
+            external=1
+            ;;
+    esac
+done
+
+# No external display: this is a normal lid close, so let logind suspend.
+[ -n "$external" ] || exit 0
+
+[ -n "$internal" ] || internal=eDP-1
+
+if ! command -v umbriel >/dev/null 2>&1; then
+    exit 0
+fi
+
+case "$action" in
+    close) umbriel msg output-disable "$internal" >/dev/null 2>&1 || true ;;
+    open)  umbriel msg output-enable "$internal" >/dev/null 2>&1 || true ;;
+esac
