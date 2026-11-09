@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Sunshine (knut 1080p60)
+Comment=Stream niri from knut with Sunshine/Moonlight
+Exec=@HOME@/.local/bin/moonlight-knut
+Icon=moonlight
+Terminal=false
+Type=Application
+Categories=Network;RemoteAccess;

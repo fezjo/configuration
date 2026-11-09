@@ -1,0 +1,59 @@
+--- a/src/main.c
++++ b/src/main.c
+@@ -459,7 +459,7 @@
+ 		.stride = vnc_client_get_stride(w->vnc),
+ 		// TODO: Get the format from the vnc module
+ 		.format = w->back_buffer->format,
+-		.damage = &w->vnc->damage,
++		.damage = &w->back_buffer->damage,
+ 	};
+ 
+ 	if (have_egl)
+@@ -868,24 +868,41 @@
+ 	}
+ }
+ 
++static int window_find_free_buffer(struct window* w)
++{
++	for (int i = 1; i <= 3; ++i) {
++		int idx = (w->buffer_index + i) % 3;
++		if (!w->buffers[idx]->is_attached)
++			return idx;
++	}
++	return -1;
++}
++
+ void on_vnc_client_update_fb(struct vnc_client* client)
+ {
+ 	if (!pixman_region_not_empty(&client->damage) &&
+ 			client->n_av_frames == 0)
+ 		return;
+ 
+-	if (window->back_buffer->is_attached)
+-		fprintf(stderr, "Oops, back-buffer is still attached.\n");
+-
+-	window_attach(window);
+-
+ 	struct pixman_region16 frame_damage = { 0 };
+ 	get_frame_damage(window->vnc, &frame_damage);
+ 
++	/* Record this update in every buffer.  If the compositor still holds
++	 * a buffer, skip it for now; its damage accumulates and it will catch
++	 * up when it is released. */
+ 	apply_buffer_damage(&frame_damage);
+-	window_damage_region(window, &frame_damage);
+ 	pixman_region_fini(&frame_damage);
+ 
++	int idx = window_find_free_buffer(window);
++	if (idx < 0)
++		return;
++
++	window->buffer_index = idx;
++	window->back_buffer = window->buffers[idx];
++
++	window_attach(window);
++
++	window_damage_region(window, &window->back_buffer->damage);
+ 	window_transfer_pixels(window);
+ 
+ 	window_commit(window);

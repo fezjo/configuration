@@ -1,0 +1,323 @@
+#!/usr/bin/env bash
+# Two-way text clipboard sync with a remote Wayland session over SSH.
+#
+# Usage:
+#   clipboard-sync start  <host>    Start syncing in the background.
+#   clipboard-sync stop   <host>    Stop the background sync.
+#   clipboard-sync status <host>    Show whether it is running.
+#   clipboard-sync run    <host>    Run in the foreground (used by start).
+#
+# Only text is synced. Images and file lists are ignored. Both machines must
+# run a Wayland compositor and have wl-clipboard installed.
+
+set -euo pipefail
+
+self=$(readlink -f -- "${BASH_SOURCE[0]}")
+state_root="${XDG_RUNTIME_DIR:-/tmp}/remote-desktop/clipboard"
+
+usage() {
+    cat <<EOF
+Usage: ${0##*/} <command> <host>
+
+Commands:
+  start    Start clipboard sync in the background.
+  stop     Stop the background clipboard sync.
+  status   Show whether clipboard sync is running.
+  run      Run clipboard sync in the foreground.
+
+Only text is synced. Both machines need wl-clipboard.
+EOF
+}
+
+die() { echo "clipboard-sync: $*" >&2; exit 1; }
+
+state_key() {
+    printf '%s' "$1" | tr -c 'A-Za-z0-9_.-' '_'
+}
+
+state_dir_for() {
+    printf '%s/%s' "$state_root" "$(state_key "$1")"
+}
+
+read_state() {
+    cat "$1" 2>/dev/null || true
+}
+
+# Print the remote XDG_RUNTIME_DIR and WAYLAND_DISPLAY, one per line.
+remote_session() {
+    ssh -o ConnectTimeout=5 "$1" bash -s <<'REMOTE'
+set -euo pipefail
+ruid=$(id -u)
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$ruid}"
+display=${WAYLAND_DISPLAY:-}
+if [ -z "$display" ]; then
+    display=$(systemctl --user show-environment 2>/dev/null \
+        | sed -n 's/^WAYLAND_DISPLAY=//p' | head -n1)
+fi
+if [ -z "$display" ]; then
+    for socket in "$XDG_RUNTIME_DIR"/wayland-*; do
+        [ -S "$socket" ] || continue
+        display=${socket##*/}
+        break
+    done
+fi
+[ -n "$display" ] || { echo "no Wayland session found" >&2; exit 1; }
+case "$display" in
+    /*) socket=$display ;;
+    *)  socket=$XDG_RUNTIME_DIR/$display ;;
+esac
+[ -S "$socket" ] || { echo "Wayland socket $socket not found" >&2; exit 1; }
+for cmd in wl-copy wl-paste base64; do
+    command -v "$cmd" >/dev/null 2>&1 ||
+        { echo "$cmd is not installed" >&2; exit 1; }
+done
+printf '%s\n%s\n' "$XDG_RUNTIME_DIR" "$display"
+REMOTE
+}
+
+remote_env() {
+    printf 'XDG_RUNTIME_DIR=%q WAYLAND_DISPLAY=%q' "$1" "$2"
+}
+
+# Recent values are remembered briefly. This suppresses the echo that comes
+# back after setting the other side's clipboard, including when a newer copy
+# overtakes an older one. Entries expire so a deliberate re-copy still syncs.
+history_ttl=5
+history_max=32
+
+lock_state() {
+    exec 9>"$1/state.lock"
+    flock 9
+}
+
+unlock_state() {
+    flock -u 9
+}
+
+history_has() {
+    local file=$1 hash=$2 now=$3
+    [ -f "$file" ] || return 1
+    awk -v now="$now" -v ttl="$history_ttl" -v hash="$hash" '
+        $1 >= now - ttl && $2 == hash { found = 1 }
+        END { exit !found }
+    ' "$file"
+}
+
+history_add() {
+    local file=$1 hash=$2 now=$3 tmp
+    tmp="$file.$$"
+    {
+        printf '%s %s\n' "$now" "$hash"
+        if [ -f "$file" ]; then
+            awk -v now="$now" -v ttl="$history_ttl" \
+                '$1 >= now - ttl' "$file"
+        fi
+    } | awk -v max="$history_max" 'NR <= max' > "$tmp"
+    mv -f -- "$tmp" "$file"
+}
+
+# Invoked by wl-paste --watch. Reads the clipboard on stdin.
+push_event() {
+    local host=$1 runtime=$2 display=$3 dir=$4
+    local tmp hash now env
+
+    tmp=$(mktemp "${TMPDIR:-/tmp}/clipboard-sync.XXXXXX") || return 0
+    trap 'rm -f -- "$tmp"' RETURN
+    cat > "$tmp"
+    [ -s "$tmp" ] || return 0
+
+    hash=$(sha256sum -- "$tmp" | cut -d' ' -f1)
+    now=$(date +%s)
+
+    lock_state "$dir"
+    if history_has "$dir/local-history" "$hash" "$now" ||
+        history_has "$dir/remote-history" "$hash" "$now"; then
+        unlock_state
+        return 0
+    fi
+    history_add "$dir/local-history" "$hash" "$now"
+    unlock_state
+
+    env=$(remote_env "$runtime" "$display")
+    ssh -o ConnectTimeout=5 "$host" "env $env wl-copy >/dev/null 2>&1" \
+        < "$tmp" || true
+}
+
+receive_event() {
+    local file=$1 dir=$2
+    local hash now
+
+    hash=$(sha256sum -- "$file" | cut -d' ' -f1)
+    now=$(date +%s)
+
+    lock_state "$dir"
+    if history_has "$dir/local-history" "$hash" "$now" ||
+        history_has "$dir/remote-history" "$hash" "$now"; then
+        unlock_state
+        return 0
+    fi
+    history_add "$dir/remote-history" "$hash" "$now"
+    unlock_state
+
+    wl-copy --type text < "$file" >/dev/null 2>&1 || true
+}
+
+run_sync() {
+    local host=$1
+    local session runtime display dir fifo tmp env ssh_pid local_pid line
+
+    session=$(remote_session "$host") ||
+        die "cannot find a Wayland session on $host"
+    runtime=$(printf '%s\n' "$session" | sed -n '1p')
+    display=$(printf '%s\n' "$session" | sed -n '2p')
+
+    dir=$(state_dir_for "$host")
+    mkdir -p "$dir"
+    chmod 700 "$dir"
+    fifo="$dir/stream"
+    rm -f -- "$fifo" "$dir/ready"
+    mkfifo "$fifo"
+    tmp="$dir/incoming"
+    : > "$dir/local-history"
+    : > "$dir/remote-history"
+
+    cleanup() {
+        trap - EXIT INT TERM HUP
+        [ -n "${local_pid:-}" ] && kill "$local_pid" 2>/dev/null || true
+        [ -n "${ssh_pid:-}" ] && kill "$ssh_pid" 2>/dev/null || true
+        [ -n "${local_pid:-}" ] && wait "$local_pid" 2>/dev/null || true
+        [ -n "${ssh_pid:-}" ] && wait "$ssh_pid" 2>/dev/null || true
+        rm -f -- "$fifo" "$dir/ready" "$tmp"
+        if [ "$(read_state "$dir/pid")" = "$$" ]; then
+            rm -f -- "$dir/pid"
+        fi
+    }
+    trap cleanup EXIT INT TERM HUP
+
+    printf '%s\n' "$$" > "$dir/pid"
+
+    # Seed the remote clipboard with the local one. The remote watcher also
+    # emits the current clipboard when it starts, so the newest copy wins.
+    wl-paste -n --type text 2>/dev/null |
+        push_event "$host" "$runtime" "$display" "$dir" || true
+
+    wl-paste --type text --watch \
+        "$self" push-event "$host" "$runtime" "$display" "$dir" &
+    local_pid=$!
+
+    env=$(remote_env "$runtime" "$display")
+    ssh -o ConnectTimeout=5 \
+        -o ServerAliveInterval=15 \
+        -o ServerAliveCountMax=3 \
+        "$host" "env $env wl-paste --type text --watch sh -c 'base64 -w0; echo'" \
+        > "$fifo" 2>>"$dir/ssh.log" &
+    ssh_pid=$!
+
+    : > "$dir/ready"
+
+    exec 3< "$fifo"
+    while IFS= read -r line <&3; do
+        [ -n "$line" ] || continue
+        if ! printf '%s' "$line" | base64 --decode > "$tmp" 2>/dev/null; then
+            continue
+        fi
+        [ -s "$tmp" ] || continue
+        receive_event "$tmp" "$dir"
+        rm -f -- "$tmp"
+    done
+}
+
+start_sync() {
+    local host=$1 dir pid i
+
+    dir=$(state_dir_for "$host")
+    mkdir -p "$dir"
+    chmod 700 "$dir"
+    pid=$(read_state "$dir/pid")
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        echo "clipboard sync already running for $host (pid $pid)"
+        return 0
+    fi
+
+    rm -f -- "$dir/ready"
+    : > "$dir/ssh.log"
+    nohup "$self" run "$host" >>"$dir/log" 2>&1 < /dev/null &
+    echo $! > "$dir/pid"
+
+    pid=$(read_state "$dir/pid")
+    for i in $(seq 1 50); do
+        [ -f "$dir/ready" ] && break
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 0.1
+    done
+
+    if [ -f "$dir/ready" ] && kill -0 "$pid" 2>/dev/null; then
+        echo "clipboard sync running for $host (pid $pid)"
+        return 0
+    fi
+
+    echo "clipboard-sync: failed to start for $host" >&2
+    tail -n 5 "$dir/log" >&2 || true
+    if kill -0 "$pid" 2>/dev/null; then
+        kill "$pid" 2>/dev/null || true
+    fi
+    rm -f -- "$dir/pid" "$dir/ready"
+    return 1
+}
+
+stop_sync() {
+    local host=$1 dir pid i
+
+    dir=$(state_dir_for "$host")
+    pid=$(read_state "$dir/pid")
+    if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+        rm -f -- "$dir/pid"
+        echo "clipboard sync is not running for $host"
+        return 0
+    fi
+
+    kill "$pid" 2>/dev/null || true
+    for i in $(seq 1 50); do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 0.1
+    done
+    if kill -0 "$pid" 2>/dev/null; then
+        kill -9 "$pid" 2>/dev/null || true
+    fi
+    rm -f -- "$dir/pid" "$dir/ready"
+    echo "clipboard sync stopped for $host"
+}
+
+status_sync() {
+    local host=$1 dir pid
+
+    dir=$(state_dir_for "$host")
+    pid=$(read_state "$dir/pid")
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        echo "clipboard sync running for $host (pid $pid)"
+    else
+        echo "clipboard sync is not running for $host"
+        return 1
+    fi
+}
+
+case "${1:-}" in
+    start|stop|status)
+        [ "$#" -eq 2 ] || { usage >&2; exit 2; }
+        "${1}_sync" "$2"
+        ;;
+    run)
+        [ "$#" -eq 2 ] || { usage >&2; exit 2; }
+        run_sync "$2"
+        ;;
+    push-event)
+        shift
+        push_event "$@"
+        ;;
+    -h|--help|help|"")
+        usage
+        ;;
+    *)
+        die "unknown command '$1' (use start, stop, status or run)"
+        ;;
+esac

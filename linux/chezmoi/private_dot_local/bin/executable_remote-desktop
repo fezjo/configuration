@@ -1,0 +1,526 @@
+#!/usr/bin/env bash
+# Start a remote desktop session on a host.
+#
+# Targets:
+#   umbriel   WayVNC on the headless Umbriel session (port 5900)
+#   niri      WayVNC on the main niri session       (port 5902)
+#   sunshine  Sunshine/Moonlight streaming of niri   (port 47989)
+#
+# VNC targets are reached through an SSH tunnel and wlvncc.
+# Sunshine is reached directly by Moonlight; the SSH connection is only used
+# to start/stop the server and the niri Mod-key watcher.
+
+set -euo pipefail
+
+usage() {
+    cat <<EOF
+Usage: ${0##*/} <command> <target> <host> [options]
+
+Commands:
+  setup     Start the remote server and wait until it is listening.
+  connect   Start the VNC tunnel + wlvncc, or launch Moonlight.
+  teardown  Stop the remote server and close local clients/tunnels.
+
+Targets:
+  umbriel   WayVNC on the headless Umbriel session (port 5900)
+  niri      WayVNC on the main niri session       (port 5902)
+  sunshine  Sunshine/Moonlight streaming of niri   (port 47989)
+
+Options:
+  -q, --quality low|medium|high
+            Streaming quality for sunshine.  If omitted on connect, an
+            interactive picker is shown when stdin is a terminal.
+            VNC targets use their server-side defaults.
+      --no-clipboard
+            Do not start the two-way text clipboard sync for sunshine.
+  -h, --help
+
+Examples:
+  ${0##*/} setup    sunshine knut-lan
+  ${0##*/} connect  sunshine knut-lan --quality medium
+  ${0##*/} connect  sunshine knut-lan --no-clipboard
+  ${0##*/} connect  niri     knut
+  ${0##*/} teardown sunshine knut-lan
+EOF
+}
+
+die() { echo "error: $*" >&2; exit 1; }
+
+case "${1:-}" in
+    -h|--help|help|"") usage; exit 0 ;;
+esac
+
+[ "$#" -ge 3 ] || { usage >&2; exit 2; }
+
+cmd=$1
+target=$2
+host=$3
+shift 3
+
+quality=""
+clipboard=1
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -q|--quality)
+            [ "$#" -ge 2 ] || die "--quality needs a value"
+            quality=$2
+            shift 2
+            ;;
+        --quality=*)
+            quality=${1#*=}
+            shift
+            ;;
+        --clipboard)
+            clipboard=1
+            shift
+            ;;
+        --no-clipboard)
+            clipboard=0
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            die "unknown argument '$1'"
+            ;;
+    esac
+done
+
+case "$cmd" in
+    setup|connect|teardown) ;;
+    *) die "unknown command '$cmd' (use setup, connect or teardown)" ;;
+esac
+
+case "$target" in
+    umbriel)
+        transport=vnc
+        remote_port=5900
+        service=wayvnc-umbriel.service
+        session_service=umbriel-remote.service
+        ;;
+    niri)
+        transport=vnc
+        remote_port=5902
+        service=wayvnc-niri.service
+        session_service=
+        ;;
+    sunshine)
+        transport=moonlight
+        ;;
+    *)
+        die "unknown target '$target' (use umbriel, niri or sunshine)"
+        ;;
+esac
+
+if [ "$transport" = vnc ] && [ -n "$quality" ]; then
+    echo "note: quality presets apply to sunshine; VNC uses its server defaults." >&2
+fi
+
+resolve_moonlight_host() {
+    local h
+    h=$(ssh -G "$host" 2>/dev/null | awk '/^hostname /{print $2; exit}')
+    [ -n "$h" ] || h=$host
+    printf '%s\n' "$h"
+}
+
+clipboard_sync_bin() {
+    local bin
+    if bin=$(command -v clipboard-sync 2>/dev/null); then
+        printf '%s\n' "$bin"
+    else
+        printf '%s\n' "$HOME/.local/bin/clipboard-sync"
+    fi
+}
+
+pick_quality() {
+    if [ -n "$quality" ]; then
+        case "$quality" in
+            low|medium|high) ;;
+            *) die "quality must be low, medium or high" ;;
+        esac
+        return
+    fi
+
+    if [ ! -t 0 ]; then
+        quality=medium
+        return
+    fi
+
+    cat >&2 <<'EOF'
+Quality:
+  1) low     720p30, 5 Mbps    (stable Wi-Fi)
+  2) medium  1080p60, 20 Mbps  (wired LAN / good Wi-Fi)
+  3) high    1080p60, 40 Mbps  (wired LAN)
+EOF
+    printf 'Choose [2]: ' >&2
+    read -r choice
+    case "${choice:-2}" in
+        1|low) quality=low ;;
+        2|medium|"") quality=medium ;;
+        3|high) quality=high ;;
+        *) die "invalid quality choice" ;;
+    esac
+}
+
+# ---------------------------------------------------------------------------
+# VNC (WayVNC + wlvncc)
+
+vnc_remote() {
+    ssh "$host" bash -s -- "$cmd" "$target" "$remote_port" "$service" "${session_service:-none}" <<'REMOTE'
+set -euo pipefail
+action=$1
+comp=$2
+port=$3
+service=$4
+session=$5
+[ "$session" = "none" ] && session=
+
+RUID=$(id -u)
+export XDG_RUNTIME_DIR="/run/user/$RUID"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$RUID/bus"
+
+wait_port() {
+    local i
+    for i in $(seq 1 100); do
+        if ss -ltn 2>/dev/null | grep -q "127.0.0.1:${port} "; then
+            return 0
+        fi
+        sleep 0.2
+    done
+    return 1
+}
+
+case "$action:$comp" in
+    setup:niri)
+        if [ ! -x "$HOME/.local/bin/wayvnc-niri" ]; then
+            echo "error: $HOME/.local/bin/wayvnc-niri is missing on $(hostname)" >&2
+            echo "See ~/.local/share/wayvnc-niri/README for the linear DMA-BUF build." >&2
+            exit 1
+        fi
+
+        if niri --version 2>/dev/null | grep -q '^niri 26\.04'; then
+            echo "note: niri 26.04 does not pass VNC modifier state to compositor binds." >&2
+            echo "      niri shortcut keys will not work over VNC (known niri issue)." >&2
+        fi
+
+        unit="$HOME/.config/systemd/user/wayvnc-niri.service"
+        if [ ! -f "$unit" ]; then
+            mkdir -p "$HOME/.config/systemd/user"
+            cat > "$unit" <<'UNIT'
+[Unit]
+Description=WayVNC for niri (linear dmabuf build)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=WAYLAND_DISPLAY=wayland-1
+ExecStartPre=/bin/sh -c 'i=0; while [ $i -lt 300 ]; do [ -S /run/user/%U/wayland-1 ] && exit 0; i=$((i+1)); sleep 0.1; done; exit 1'
+ExecStart=%h/.local/bin/wayvnc-niri -r -f 60 -g 127.0.0.1:5902
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
+UNIT
+            systemctl --user daemon-reload
+        fi
+
+        systemctl --user start "$service"
+        ;;
+
+    setup:umbriel)
+        if ! systemctl --user cat "$session" >/dev/null 2>&1; then
+            echo "error: $session not found on $(hostname)" >&2
+            echo "Configure the headless Umbriel session first." >&2
+            exit 1
+        fi
+        if ! systemctl --user cat "$service" >/dev/null 2>&1; then
+            echo "error: $service not found on $(hostname)" >&2
+            exit 1
+        fi
+
+        systemctl --user start "$session"
+        systemctl --user start "$service"
+        ;;
+
+    connect:*)
+        if ! ss -ltn 2>/dev/null | grep -q "127.0.0.1:${port} "; then
+            echo "error: $comp VNC is not listening on 127.0.0.1:$port" >&2
+            echo "Run: remote-desktop setup $comp $host" >&2
+            exit 1
+        fi
+        ;;
+
+    teardown:*)
+        systemctl --user stop "$service" 2>/dev/null || true
+        if [ -n "$session" ]; then
+            systemctl --user stop "$session" 2>/dev/null || true
+        fi
+        echo "stopped $comp VNC on $(hostname)"
+        exit 0
+        ;;
+esac
+
+wait_port || {
+    echo "error: $comp VNC did not start listening on 127.0.0.1:$port" >&2
+    systemctl --user status "$service" --no-pager 2>&1 | tail -20 >&2 || true
+    exit 1
+}
+
+echo "$comp VNC listening on 127.0.0.1:$port"
+REMOTE
+}
+
+state_dir="${XDG_RUNTIME_DIR:-/tmp}/remote-desktop"
+mkdir -p "$state_dir"
+key=$(printf '%s-%s' "$target" "$host" | tr -c 'A-Za-z0-9_.-' '_')
+tunnel_pidfile="$state_dir/$key.tunnel.pid"
+client_pidfile="$state_dir/$key.client.pid"
+
+kill_pidfile() {
+    local f=$1
+    [ -f "$f" ] || return 0
+    local pid
+    pid=$(cat "$f" 2>/dev/null || true)
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        kill "$pid" 2>/dev/null || true
+    fi
+    rm -f "$f"
+}
+
+vnc_connect() {
+    vnc_remote
+
+    port_free() {
+        ! ss -ltn 2>/dev/null | grep -q "127.0.0.1:$1 "
+    }
+
+    local_port=
+    for p in $(seq 15900 15999); do
+        if port_free "$p"; then
+            local_port=$p
+            break
+        fi
+    done
+    [ -n "$local_port" ] || die "no free local port in 15900-15999"
+
+    command -v wlvncc >/dev/null 2>&1 || die "wlvncc not found in PATH"
+
+    ssh -N \
+        -o ExitOnForwardFailure=yes \
+        -o ServerAliveInterval=15 \
+        -o ServerAliveCountMax=3 \
+        -L "${local_port}:127.0.0.1:${remote_port}" \
+        "$host" &
+    tunnel_pid=$!
+    echo "$tunnel_pid" > "$tunnel_pidfile"
+
+    client_pid=
+    cleanup() {
+        trap - EXIT INT TERM
+        if [ -n "${client_pid:-}" ] && kill -0 "$client_pid" 2>/dev/null; then
+            kill "$client_pid" 2>/dev/null || true
+        fi
+        if [ -n "${tunnel_pid:-}" ] && kill -0 "$tunnel_pid" 2>/dev/null; then
+            kill "$tunnel_pid" 2>/dev/null || true
+            wait "$tunnel_pid" 2>/dev/null || true
+        fi
+        rm -f "$tunnel_pidfile" "$client_pidfile"
+    }
+    trap cleanup EXIT INT TERM
+
+    for _ in $(seq 1 50); do
+        if ss -ltn 2>/dev/null | grep -q "127.0.0.1:${local_port} "; then
+            break
+        fi
+        if ! kill -0 "$tunnel_pid" 2>/dev/null; then
+            die "SSH tunnel exited before opening local port $local_port"
+        fi
+        sleep 0.1
+    done
+
+    ss -ltn 2>/dev/null | grep -q "127.0.0.1:${local_port} " ||
+        die "SSH tunnel did not open local port $local_port"
+
+    echo "Tunnel 127.0.0.1:${local_port} -> ${host}:127.0.0.1:${remote_port} ($target)"
+    wlvncc 127.0.0.1 "$local_port" &
+    client_pid=$!
+    echo "$client_pid" > "$client_pidfile"
+    wait "$client_pid" || true
+}
+
+# ---------------------------------------------------------------------------
+# Sunshine + Moonlight
+
+sunshine_setup() {
+    ssh "$host" bash -s <<'REMOTE'
+set -euo pipefail
+RUID=$(id -u)
+export XDG_RUNTIME_DIR="/run/user/$RUID"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$RUID/bus"
+
+port_open() {
+    ss -ltn 2>/dev/null | grep -q ':47989 '
+}
+
+if ! port_open; then
+    if systemctl --user cat app-dev.lizardbyte.app.Sunshine.service >/dev/null 2>&1; then
+        systemctl --user start app-dev.lizardbyte.app.Sunshine.service
+    elif systemctl --user cat sunshine.service >/dev/null 2>&1; then
+        systemctl --user start sunshine.service
+    else
+        echo "error: Sunshine is not running and no Sunshine user service was found on $(hostname)" >&2
+        echo "Install sunshine-bin (AUR) and start app-dev.lizardbyte.app.Sunshine.service." >&2
+        exit 1
+    fi
+fi
+
+if systemctl --user cat sunshine-mod-watch.service >/dev/null 2>&1; then
+    systemctl --user start sunshine-mod-watch.service 2>/dev/null || true
+fi
+
+for i in $(seq 1 100); do
+    port_open && exit 0
+    sleep 0.2
+done
+
+echo "error: Sunshine did not start listening on 47989" >&2
+exit 1
+REMOTE
+}
+
+sunshine_teardown() {
+    ssh "$host" bash -s <<'REMOTE'
+set -euo pipefail
+RUID=$(id -u)
+export XDG_RUNTIME_DIR="/run/user/$RUID"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$RUID/bus"
+
+systemctl --user stop app-dev.lizardbyte.app.Sunshine.service 2>/dev/null || true
+systemctl --user stop sunshine.service 2>/dev/null || true
+systemctl --user stop sunshine-mod-watch.service 2>/dev/null || true
+
+for p in $(pgrep -x sunshine 2>/dev/null || true); do
+    kill "$p" 2>/dev/null || true
+done
+
+if [ -x "$HOME/.local/bin/niri-mod-alt.sh" ]; then
+    "$HOME/.local/bin/niri-mod-alt.sh" off >/dev/null 2>&1 || true
+fi
+
+echo "stopped Sunshine on $(hostname)"
+REMOTE
+
+    for p in $(pgrep -x moonlight 2>/dev/null || true); do
+        kill "$p" 2>/dev/null || true
+    done
+
+    local cb
+    cb=$(clipboard_sync_bin)
+    if [ -x "$cb" ]; then
+        "$cb" stop "$host" >/dev/null 2>&1 || true
+    fi
+}
+
+sunshine_connect() {
+    local ml_host ml_bin cb
+    local clipboard_started=0
+    local -a qargs
+    ml_host=$(resolve_moonlight_host)
+
+    if ! nc -z -w2 "$ml_host" 47989 >/dev/null 2>&1; then
+        die "Sunshine is not reachable at $ml_host:47989; run: ${0##*/} setup sunshine $host"
+    fi
+
+    pick_quality
+
+    if command -v moonlight >/dev/null 2>&1; then
+        ml_bin=$(command -v moonlight)
+    elif [ -n "${MOONLIGHT_BIN:-}" ] && [ -x "${MOONLIGHT_BIN}" ]; then
+        ml_bin=$MOONLIGHT_BIN
+    else
+        die "moonlight not found; install moonlight-qt"
+    fi
+
+    run_ml() {
+        "$ml_bin" "$@"
+    }
+
+    if ! run_ml list "$ml_host" >/dev/null 2>&1; then
+        die "Moonlight is not paired with $ml_host. Pair in Moonlight first, then retry."
+    fi
+
+    cb=$(clipboard_sync_bin)
+    if [ "$clipboard" -eq 1 ]; then
+        if [ -x "$cb" ]; then
+            if "$cb" start "$host" >/dev/null 2>&1; then
+                clipboard_started=1
+                echo "Clipboard sync: on (text only, both directions)"
+            else
+                echo "note: clipboard sync failed to start; run: $cb status $host" >&2
+            fi
+        else
+            echo "note: clipboard-sync not installed; see client/README.md" >&2
+        fi
+    fi
+
+    stop_clipboard() {
+        trap - EXIT INT TERM
+        if [ "$clipboard_started" -eq 1 ]; then
+            "$cb" stop "$host" >/dev/null 2>&1 || true
+        fi
+    }
+    trap stop_clipboard EXIT INT TERM
+
+    case "$quality" in
+        low)    qargs=(--720  --fps 30 --bitrate 5000) ;;
+        medium) qargs=(--1080 --fps 60 --bitrate 20000) ;;
+        high)   qargs=(--1080 --fps 60 --bitrate 40000) ;;
+    esac
+
+    echo "Moonlight -> $ml_host  ($quality)"
+    run_ml stream "$ml_host" Desktop \
+        "${qargs[@]}" \
+        --packet-size 1024 \
+        --display-mode windowed
+
+    stop_clipboard
+}
+
+# ---------------------------------------------------------------------------
+
+case "$cmd" in
+    setup)
+        if [ "$transport" = vnc ]; then
+            vnc_remote
+            echo
+            echo "Connect with: ${0##*/} connect $target $host"
+        else
+            sunshine_setup
+            ml_host=$(resolve_moonlight_host)
+            echo "Sunshine listening on $host (Moonlight address: $ml_host)"
+            echo "Connect with: ${0##*/} connect sunshine $host --quality low|medium|high"
+        fi
+        ;;
+
+    connect)
+        if [ "$transport" = vnc ]; then
+            vnc_connect
+        else
+            sunshine_connect
+        fi
+        ;;
+
+    teardown)
+        if [ "$transport" = vnc ]; then
+            vnc_remote
+            kill_pidfile "$client_pidfile"
+            kill_pidfile "$tunnel_pidfile"
+        else
+            sunshine_teardown
+        fi
+        ;;
+esac

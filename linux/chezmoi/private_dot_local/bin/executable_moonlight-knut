@@ -1,0 +1,3 @@
+#!/bin/sh
+# Shortcut: stream knut's niri desktop with Sunshine/Moonlight.
+exec /home/fezjo/.local/bin/remote-desktop connect sunshine knut-lan --quality medium
