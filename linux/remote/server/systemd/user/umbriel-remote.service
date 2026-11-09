@@ -1,0 +1,20 @@
+[Unit]
+Description=Headless Umbriel session for remote access
+Documentation=https://docs.noctalia.dev/umbriel/
+
+[Service]
+Type=simple
+RuntimeDirectory=umbriel-remote
+RuntimeDirectoryMode=0700
+Environment=XDG_RUNTIME_DIR=/run/user/%U/umbriel-remote
+Environment=WAYLAND_DISPLAY=umbriel-remote
+UnsetEnvironment=WAYLAND_SOCKET DISPLAY
+Environment=WLR_BACKENDS=headless
+Environment=WLR_HEADLESS_OUTPUTS=0
+Environment=WLR_RENDERER_ALLOW_SOFTWARE=1
+ExecStart=/usr/bin/umbriel
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

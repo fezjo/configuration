@@ -1,0 +1,15 @@
+[Unit]
+Description=WayVNC for niri (linear dmabuf build)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=WAYLAND_DISPLAY=wayland-1
+ExecStartPre=/bin/sh -c 'i=0; while [ $i -lt 300 ]; do [ -S /run/user/%U/wayland-1 ] && exit 0; i=$((i+1)); sleep 0.1; done; exit 1'
+ExecStart=%h/.local/bin/wayvnc-niri -r -f 60 -g 127.0.0.1:5902
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

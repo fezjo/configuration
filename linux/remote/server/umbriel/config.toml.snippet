@@ -1,0 +1,14 @@
+# Umbriel changes needed for the headless remote session.
+# Merge these tables into your existing ~/.config/umbriel/config.toml.
+# The rest of the packaged default configuration is unchanged.
+
+[general]
+# Creates the virtual output used by WayVNC (-o remote).
+autostart = ["@HOME@/.config/umbriel/remote-output.sh"]
+
+[input.keyboard]
+numlock_toggle = true
+
+[keybinds]
+"Mod+D" = "spawn fuzzel"
+"Mod+B" = "spawn @HOME@/.local/bin/zen-umbriel"

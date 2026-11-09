@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Zen (remote session)
+Comment=Zen Browser in the headless Umbriel session
+Exec=@HOME@/.local/bin/zen-umbriel %u
+Icon=zen-browser
+Type=Application
+Categories=Network;WebBrowser;
+StartupNotify=true

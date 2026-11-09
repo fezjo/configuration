@@ -1,0 +1,8 @@
+#!/bin/sh
+# Launch Zen Browser inside the headless Umbriel (remote) session.
+# Without a separate profile, Zen forwards the request to the running
+# desktop instance and the window appears on niri instead.
+RUID=$(id -u)
+export XDG_RUNTIME_DIR=/run/user/"$RUID"/umbriel-remote
+export WAYLAND_DISPLAY=wayland-0
+exec /usr/bin/zen-browser --no-remote --new-instance --profile "$HOME/.zen-umbriel" "$@"

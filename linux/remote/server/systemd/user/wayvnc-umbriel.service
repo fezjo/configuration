@@ -1,0 +1,18 @@
+[Unit]
+Description=WayVNC for the headless Umbriel session
+After=umbriel-remote.service
+PartOf=umbriel-remote.service
+BindsTo=umbriel-remote.service
+Requisite=umbriel-remote.service
+
+[Service]
+Environment=XDG_RUNTIME_DIR=/run/user/%U/umbriel-remote
+Environment=WAYLAND_DISPLAY=wayland-0
+Environment=UMBRIEL_SOCKET=/run/user/%U/umbriel-remote/umbriel-wayland-0.sock
+ExecStartPre=/bin/sh -c 'i=0; while [ $i -lt 300 ]; do /usr/bin/umbriel outputs 2>/dev/null | grep -q remote && exit 0; i=$((i+1)); sleep 0.1; done; exit 1'
+ExecStart=/usr/bin/wayvnc -o remote -r -f 60 -g 127.0.0.1:5900
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,14 @@
+# Explicit packages installed on knut for remote access.
+# Install with your AUR helper; sunshine-bin and umbriel-git are AUR packages.
+
+niri
+umbriel-git
+xdg-desktop-portal-umbriel-git
+xdg-desktop-portal
+xdg-desktop-portal-gtk
+wayvnc
+sunshine-bin
+wl-clipboard
+
+# Optional / currently unused:
+# rustdesk-bin

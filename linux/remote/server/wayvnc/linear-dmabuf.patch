@@ -1,0 +1,20 @@
+--- a/src/buffer.c
++++ b/src/buffer.c
+@@ -318,9 +318,16 @@
+ 	} else
+ #endif
+ 	{
++		uint64_t linear_mod = DRM_FORMAT_MOD_LINEAR;
++		const uint64_t* mods = config->modifiers;
++		int n_mods = config->n_modifiers;
++		if (n_mods == 0) {
++			mods = &linear_mod;
++			n_mods = 1;
++		}
+ 		self->bo = gbm_bo_create_with_modifiers2(gbm->dev,
+ 				config->width, config->height, config->format,
+-				config->modifiers, config->n_modifiers,
++				mods, n_mods,
+ 				GBM_BO_USE_RENDERING);
+ 	}
+ 
