@@ -18,4 +18,10 @@ check:
 		ln -s "$$HOME/.config/niri/dms" "$$tmp/dms"; \
 		niri validate -c "$$tmp/config.kdl" >/dev/null 2>&1; \
 	fi; \
+	if command -v umbriel >/dev/null 2>&1; then \
+		umbriel config validate -c "$$PWD/linux/chezmoi/dot_config/umbriel/config.toml" >/dev/null; \
+	fi; \
+	if command -v noctalia >/dev/null 2>&1; then \
+		noctalia config validate "$$PWD/linux/chezmoi/dot_config/noctalia/config.toml" >/dev/null; \
+	fi; \
 	echo "checks passed"

@@ -45,8 +45,8 @@ windows/                         # separate setup notes
    custom commands. Replace that string if you want another account. Change the
    hostname and the throwaway password hash in the TUI before installing.
 
-Local checks: `make check` (bash/sh/zsh/fish syntax, JSON, Python syntax, and
-niri config).
+Local checks: `make check` (bash/sh/zsh/fish syntax, JSON, Python syntax,
+and niri, Umbriel, and Noctalia config).
 
 `setup.sh` runs the pre-install step, installs the package list, applies
 system files, and runs the post-install step (chezmoi, memory, services, and
