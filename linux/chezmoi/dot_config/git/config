@@ -28,7 +28,7 @@
 [core]
 	excludesFile = ~/.config/git/gitignore
 	pager = delta
-	editor = helix
+	editor = hx
 	untrackedCache = true
 
 [credential "https://github.com"]

@@ -95,7 +95,7 @@ sensitivity = 0.0
 "Mod+O" = { action = "overview-toggle", repeat = false }
 "Mod+Q" = { action = "window-close", repeat = false }
 "Mod+Shift+Q" = { action = "window-kill", repeat = false }
-"Mod+Escape" = "session-quit"
+"Mod+Ctrl+Escape" = "session-quit"
 "Mod+Shift+Escape" = { action = "shortcuts-inhibit-toggle", allow_when_inhibited = true, repeat = false }
 "Mod+Alt+Return" = { action = "workspace-set-layout toggle", repeat = false }
 

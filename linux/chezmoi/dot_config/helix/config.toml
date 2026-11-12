@@ -1,5 +1,8 @@
 # adawaita-dark ayu_dark dracula_at_night github_dark_dimmed molokai new_moon onedark voxed
-theme = "dank_dark"
+theme = "ayu_dark"
+# [theme]
+# dark = "dank_light"
+# light = "dank_light"
 
 [editor]
 auto-pairs = false
