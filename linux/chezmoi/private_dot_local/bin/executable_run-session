@@ -1,0 +1,605 @@
+#!/usr/bin/env bash
+# run-session - start a compositor in its own runtime dir and private D-Bus bus.
+#
+# Repository copy. Install a standalone copy for interactive use with:
+#   mise run session:install
+# (or: install -Dm755 scripts/run-session ~/.local/bin/run-session)
+#
+#   scripts/run-session <compositor> [options] [-- extra args]
+#   scripts/run-session list
+#   scripts/run-session status [compositor]
+#   scripts/run-session stop <compositor>
+#   scripts/run-session env <compositor>
+#   scripts/run-session exec <compositor> [--] command...
+#
+# Management commands accept --state DIR before the compositor:
+#   scripts/run-session status --state /tmp/ultrabolic-tty kde
+#
+# Compositors: hypr (Hyprland), kde (Plasma/Wayland), kwin (bare KWin),
+# umbriel, niri.
+#
+# Every session gets its own state directory:
+#
+#   $STATE/config      private XDG_CONFIG_HOME (--isolate-config)
+#   $STATE/cache       private XDG_CACHE_HOME
+#   $STATE/state       private XDG_STATE_HOME
+#   $STATE/pid         compositor pid
+#   $STATE/bus         private D-Bus address
+#   $STATE/socket      Wayland socket name inside the private runtime
+#   $STATE/display     Xwayland DISPLAY number, if the compositor started one
+#   $STATE/session.log
+#   $STATE/runtime     symlink to the private XDG_RUNTIME_DIR
+#
+# The runtime directory itself is short, because Hyprland builds its IPC socket
+# path from XDG_RUNTIME_DIR and a 40-byte instance signature:
+#
+#   /run/user/<uid>/u/<8 hex>    (default; override with ULTRABOLIC_RUNTIME_ROOT)
+#
+# Two compositors can therefore run at the same time without seeing each
+# other's Wayland sockets or D-Bus names. Audio remains on the host runtime via
+# PIPEWIRE_RUNTIME_DIR, and HOME/XDG_DATA_HOME stay shared.
+#
+# State root: $ULTRABOLIC_SESSION_ROOT
+#             (default: ${XDG_RUNTIME_DIR:-/tmp}/ultrabolic-sessions)
+#
+# Options for `run`:
+#   --nested             run inside the current Wayland session (Wayland backend)
+#   --detach             start in the background and return
+#   --state DIR          use DIR as the session state directory
+#   --isolate-config     use $STATE/config as XDG_CONFIG_HOME
+#   --config-home DIR    use DIR as XDG_CONFIG_HOME
+#   --env KEY=VALUE      extra environment for the compositor (repeatable)
+#   --dry-run            print what would run, do not start anything
+#
+# Examples:
+#   scripts/run-session hypr --nested
+#   scripts/run-session kwin --nested --detach
+#   scripts/run-session umbriel --detach
+#   scripts/run-session exec hypr -- foot
+#   eval "$(scripts/run-session env kwin)"
+#   scripts/run-session stop kwin
+
+set -euo pipefail
+
+REPO=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+PROG=$(basename -- "$0")
+REAL_RUNTIME=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+ROOT=${ULTRABOLIC_SESSION_ROOT:-$REAL_RUNTIME/ultrabolic-sessions}
+
+die() {
+  printf '%s: %s\n' "$PROG" "$*" >&2
+  exit 1
+}
+
+usage() {
+  sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+normalize_comp() {
+  case "${1:-}" in
+  hypr | hyprland | Hyprland) echo hypr ;;
+  kde | plasma | Plasma) echo kde ;;
+  kwin | kwin_wayland) echo kwin ;;
+  umbriel | Umbriel) echo umbriel ;;
+  niri | Niri) echo niri ;;
+  *) return 1 ;;
+  esac
+}
+
+desktop_name() {
+  case "$1" in
+  hypr) echo Hyprland ;;
+  kde | kwin) echo KDE ;;
+  umbriel) echo umbriel ;;
+  niri) echo niri ;;
+  esac
+}
+
+state_dir() {
+  echo "${STATE_OVERRIDE:-$ROOT/$1}"
+}
+
+# Keep this path short: Hyprland's IPC socket path is
+#   $XDG_RUNTIME_DIR/hypr/<40-byte signature>/.socket.sock
+# and Unix domain sockets have a 108-byte limit.
+runtime_for_state() {
+  local s=$1 base
+  base=${ULTRABOLIC_RUNTIME_ROOT:-/run/user/$(id -u)/u}
+  if ! mkdir -p "$base" 2>/dev/null; then
+    base=$REAL_RUNTIME/u
+    mkdir -p "$base"
+  fi
+  chmod 700 "$base" 2>/dev/null || true
+  printf '%s/%s\n' "$base" "$(printf '%s' "$s" | sha1sum | cut -c1-8)"
+}
+
+# Set STATE and RUNTIME for a compositor.
+resolve_state() {
+  STATE=$(state_dir "$1")
+  RUNTIME=$(runtime_for_state "$STATE")
+  if [ "$1" = hypr ] && [ "${#RUNTIME}" -gt 29 ]; then
+    die "private runtime path is too long for Hyprland's IPC socket: $RUNTIME
+set ULTRABOLIC_RUNTIME_ROOT to a shorter directory"
+  fi
+}
+
+session_pid() {
+  [ -s "$STATE/pid" ] && cat "$STATE/pid"
+}
+
+session_running() {
+  local pid
+  pid=$(session_pid 2>/dev/null || true)
+  [ -n "$pid" ] && [ -r "/proc/$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
+runtime_pids() {
+  local p
+  for p in /proc/[0-9]*; do
+    [ -r "$p/environ" ] || continue
+    if tr '\0' '\n' <"$p/environ" 2>/dev/null | grep -Fqx "XDG_RUNTIME_DIR=$RUNTIME"; then
+      printf '%s\n' "${p#/proc/}"
+    fi
+  done
+}
+
+detect_socket() {
+  local f
+  for f in "$RUNTIME"/wayland-*; do
+    [ -S "$f" ] || continue
+    basename -- "$f"
+    return 0
+  done
+  return 1
+}
+
+detect_display() {
+  local p args
+  for p in $(pgrep -x Xwayland 2>/dev/null || true); do
+    [ -r "/proc/$p/environ" ] || continue
+    if tr '\0' '\n' <"/proc/$p/environ" 2>/dev/null | grep -Fqx "XDG_RUNTIME_DIR=$RUNTIME"; then
+      args=$(tr '\0' ' ' <"/proc/$p/cmdline" 2>/dev/null || true)
+      printf '%s\n' "$args" | grep -oE '(^| ):[0-9]+( |$)' | head -n 1 | tr -d ' '
+      return 0
+    fi
+  done
+  return 1
+}
+
+detect_hypr_signature() {
+  local d
+  for d in "$RUNTIME"/hypr/*; do
+    [ -e "$d/hyprland.lock" ] || [ -S "$d/.socket.sock" ] || continue
+    basename -- "$d"
+    return 0
+  done
+  return 1
+}
+
+detect_umbriel_socket() {
+  local sock
+  sock=$(detect_socket) || return 1
+  [ -S "$RUNTIME/umbriel-$sock.sock" ] && echo "$RUNTIME/umbriel-$sock.sock"
+}
+
+detect_niri_socket() {
+  local f
+  for f in "$RUNTIME"/niri.*.sock; do
+    [ -S "$f" ] && {
+      echo "$f"
+      return 0
+    }
+  done
+  return 1
+}
+
+write_meta() {
+  local sock display
+  sock=$(detect_socket || true)
+  display=$(detect_display || true)
+  [ -n "$sock" ] && printf '%s\n' "$sock" >"$STATE/socket"
+  [ -n "$display" ] && printf '%s\n' "$display" >"$STATE/display"
+}
+
+# Environment shared by the compositor and every client started into it.
+base_session_env() {
+  local s=$1 rt=$2 comp=$3 desktop
+  desktop=$(desktop_name "$comp")
+
+  export XDG_RUNTIME_DIR="$rt"
+  export XDG_CACHE_HOME="$s/cache"
+  export XDG_STATE_HOME="$s/state"
+  if [ -s "$s/config-home" ]; then
+    export XDG_CONFIG_HOME
+    XDG_CONFIG_HOME=$(cat "$s/config-home")
+  fi
+  export XDG_SESSION_TYPE=wayland
+  export XDG_SESSION_CLASS=user
+  export XDG_CURRENT_DESKTOP="$desktop"
+  export XDG_SESSION_DESKTOP="$desktop"
+
+  # Keep audio and other host services on the real runtime, even when this
+  # session is nested inside another run-session session.
+  local audio_runtime=${PIPEWIRE_RUNTIME_DIR:-$REAL_RUNTIME}
+  export PIPEWIRE_RUNTIME_DIR="$audio_runtime"
+  if [ -z "${PULSE_SERVER:-}" ] && [ -S "$audio_runtime/pulse/native" ]; then
+    export PULSE_SERVER="unix:$audio_runtime/pulse/native"
+  fi
+
+  if [ "$comp" = kde ] || [ "$comp" = kwin ]; then
+    local qt="$HOME/.local/lib/qt6/plugins"
+    [ -d "$qt" ] || qt=
+    export QT_PLUGIN_PATH="${qt:+$qt:}/usr/lib/qt6/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
+  fi
+}
+
+# Environment for clients launched later into an existing session.
+client_env() {
+  local comp=$1
+  resolve_state "$comp"
+  session_running || die "no running $comp session at $STATE"
+
+  base_session_env "$STATE" "$RUNTIME" "$comp"
+  export WAYLAND_DISPLAY
+  WAYLAND_DISPLAY=$(detect_socket) || die "session has no Wayland socket yet"
+  export DBUS_SESSION_BUS_ADDRESS
+  DBUS_SESSION_BUS_ADDRESS=$(cat "$STATE/bus" 2>/dev/null || true)
+  [ -n "$DBUS_SESSION_BUS_ADDRESS" ] || die "session has no D-Bus address yet"
+
+  local display hypr_sig umbriel niri_sock
+  display=$(detect_display || true)
+  [ -n "$display" ] && export DISPLAY="$display"
+  unset HYPRLAND_INSTANCE_SIGNATURE UMBRIEL_SOCKET NIRI_SOCKET
+  hypr_sig=$(detect_hypr_signature || true)
+  [ -n "$hypr_sig" ] && export HYPRLAND_INSTANCE_SIGNATURE="$hypr_sig"
+  umbriel=$(detect_umbriel_socket || true)
+  [ -n "$umbriel" ] && export UMBRIEL_SOCKET="$umbriel"
+  niri_sock=$(detect_niri_socket || true)
+  [ -n "$niri_sock" ] && export NIRI_SOCKET="$niri_sock"
+
+  unset WAYLAND_SOCKET LIBEI_SOCKET XDG_ACTIVATION_TOKEN DESKTOP_STARTUP_ID
+}
+
+print_env() {
+  local comp=$1 name
+  client_env "$comp"
+  for name in XDG_RUNTIME_DIR XDG_CACHE_HOME XDG_STATE_HOME XDG_CONFIG_HOME XDG_SESSION_TYPE \
+    XDG_SESSION_CLASS XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP WAYLAND_DISPLAY \
+    DISPLAY DBUS_SESSION_BUS_ADDRESS PIPEWIRE_RUNTIME_DIR PULSE_SERVER \
+    HYPRLAND_INSTANCE_SIGNATURE UMBRIEL_SOCKET NIRI_SOCKET QT_PLUGIN_PATH; do
+    [ -n "${!name:-}" ] && printf 'export %s=%q\n' "$name" "${!name}"
+  done
+}
+
+umbriel_bin() {
+  local dir build
+  dir=${UMBRIEL_DIR:-$REPO/../umbriel}
+  build=${UMBRIEL_BUILD_DIR:-$dir/build}
+  echo "${UMBRIEL_BIN:-$build/umbriel}"
+}
+
+build_command() {
+  local comp=$1
+  case "$comp" in
+  hypr)
+    command -v Hyprland >/dev/null || die "Hyprland not found"
+    CMD=("$(command -v Hyprland)")
+    ;;
+  kde)
+    command -v startplasma-wayland >/dev/null || die "startplasma-wayland not found"
+    CMD=("$(command -v startplasma-wayland)")
+    ;;
+  kwin)
+    command -v kwin_wayland >/dev/null || die "kwin_wayland not found"
+    CMD=("$(command -v kwin_wayland)" --xwayland --socket wayland-0)
+    ;;
+  umbriel)
+    local bin
+    bin=$(umbriel_bin)
+    [ -x "$bin" ] || die "no Umbriel binary at $bin; run: mise run umbriel:build"
+    CMD=("$bin")
+    ;;
+  niri)
+    command -v niri >/dev/null || die "niri not found"
+    CMD=("$(command -v niri)")
+    ;;
+  *)
+    die "unknown compositor '$comp'"
+    ;;
+  esac
+}
+
+# ── start ────────────────────────────────────────────────────────────────────
+
+start_session() {
+  local comp=$1 nested=$2 detach=$3 dry=$4
+  shift 4
+  local extra=("$@")
+
+  resolve_state "$comp"
+
+  if session_running; then
+    die "$comp is already running (pid $(session_pid), state $STATE); stop it first"
+  fi
+
+  local host_wayland=
+  if [ "$nested" = 1 ]; then
+    if [ "$comp" = kde ]; then
+      die "kde does not support --nested; use 'kwin --nested' for a nested KDE compositor"
+    fi
+    [ -n "${WAYLAND_DISPLAY:-}" ] || die "--nested needs a running Wayland session (WAYLAND_DISPLAY is unset)"
+    case "$WAYLAND_DISPLAY" in
+    /*) host_wayland=$WAYLAND_DISPLAY ;;
+    *) host_wayland=$REAL_RUNTIME/$WAYLAND_DISPLAY ;;
+    esac
+    [ -S "$host_wayland" ] || die "host Wayland socket not found: $host_wayland"
+  fi
+
+  base_session_env "$STATE" "$RUNTIME" "$comp"
+  unset DBUS_SESSION_BUS_ADDRESS DBUS_STARTER_ADDRESS
+  unset HYPRLAND_INSTANCE_SIGNATURE UMBRIEL_SOCKET WAYLAND_SOCKET LIBEI_SOCKET
+  unset XDG_ACTIVATION_TOKEN DESKTOP_STARTUP_ID
+
+  unset DISPLAY
+  if [ "$nested" = 1 ]; then
+    export WAYLAND_DISPLAY="$host_wayland"
+    case "$comp" in
+    umbriel) export WLR_BACKENDS=wayland ;;
+    hypr) export HYPRLAND_NO_SD_NOTIFY=1 ;;
+    esac
+  else
+    unset WAYLAND_DISPLAY
+  fi
+
+  if [ "$isolate_config" = 1 ] && [ -z "$config_home" ]; then
+    export XDG_CONFIG_HOME="$STATE/config"
+  elif [ -n "$config_home" ]; then
+    export XDG_CONFIG_HOME="$config_home"
+  fi
+
+  local kv
+  for kv in "${SESSION_ENV[@]}"; do
+    export "$kv"
+  done
+
+  build_command "$comp"
+  if [ "$comp" = niri ]; then
+    export NIRI_DISABLE_SYSTEM_MANAGER_NOTIFY=1
+    # niri --session is for a main DRM session: it publishes the environment
+    # and starts D-Bus services. A nested niri must not use it (winit backend).
+    [ "$nested" != 1 ] && CMD+=(--session)
+  fi
+  CMD+=("${extra[@]}")
+
+  local wrapper
+  wrapper='printf "%s\n" "${DBUS_SESSION_BUS_ADDRESS:-}" > "$1/bus"; echo $$ > "$1/pid"; shift; exec "$@"'
+  LAUNCH=(dbus-run-session -- bash -c "$wrapper" _ "$STATE" "${CMD[@]}")
+
+  if [ "$dry" = 1 ]; then
+    echo "comp=$comp state=$STATE"
+    echo "runtime=$RUNTIME"
+    echo "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}"
+    [ "$nested" = 1 ] && echo "host_wayland=$host_wayland"
+    printf 'launch='
+    printf '%q ' "${LAUNCH[@]}"
+    printf '\n'
+    return 0
+  fi
+
+  mkdir -p "$STATE" "$STATE/config" "$STATE/cache" "$STATE/state"
+  chmod 700 "$STATE"
+  rm -rf "$RUNTIME"
+  mkdir -m 700 "$RUNTIME"
+  ln -sfn "$RUNTIME" "$STATE/runtime"
+  rm -f "$STATE/pid" "$STATE/bus" "$STATE/socket" "$STATE/display"
+  if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+    printf '%s\n' "$XDG_CONFIG_HOME" >"$STATE/config-home"
+  else
+    rm -f "$STATE/config-home"
+  fi
+
+  local log="$STATE/session.log"
+  : >"$log"
+  echo "starting $comp (state $STATE, runtime $RUNTIME)"
+  if [ "$nested" = 1 ]; then
+    echo "nested in $WAYLAND_DISPLAY; clients use the private socket in $RUNTIME"
+  fi
+
+  local child
+  if [ "$detach" = 1 ]; then
+    setsid -f "${LAUNCH[@]}" >>"$log" 2>&1
+    child=
+  else
+    "${LAUNCH[@]}" >>"$log" 2>&1 &
+    child=$!
+  fi
+
+  local i sock
+  for i in $(seq 1 300); do
+    sock=$(detect_socket 2>/dev/null || true)
+    [ -n "$sock" ] && break
+    if [ -n "$child" ] && ! kill -0 "$child" 2>/dev/null; then
+      tail -n 40 "$log" >&2 || true
+      die "$comp exited during startup"
+    fi
+    if [ "$detach" = 1 ] && [ -s "$STATE/pid" ] && ! session_running; then
+      tail -n 40 "$log" >&2 || true
+      die "$comp exited during startup"
+    fi
+    sleep 0.1
+  done
+
+  write_meta
+  sock=$(detect_socket 2>/dev/null || true)
+  if [ -z "$sock" ]; then
+    echo "warning: no Wayland socket appeared after 30s; see $log" >&2
+  else
+    printf 'session up: %s pid=%s wayland=%s state=%s\n' \
+      "$comp" "$(session_pid 2>/dev/null || echo '?')" "$sock" "$STATE"
+    [ -s "$STATE/display" ] && printf 'xwayland: %s\n' "$(cat "$STATE/display")"
+    printf 'use: %s exec %s -- <command>\n' "$0" "$comp"
+  fi
+
+  if [ "$detach" = 1 ]; then
+    return 0
+  fi
+  local rc=0
+  wait "$child" || rc=$?
+  rm -f "$STATE/pid"
+  exit "$rc"
+}
+
+# ── stop / status / list ─────────────────────────────────────────────────────
+
+stop_session() {
+  local comp=$1 pids p
+  resolve_state "$comp"
+  pids=$(runtime_pids 2>/dev/null || true)
+  if [ -s "$STATE/pid" ]; then
+    pids=$(printf '%s\n%s\n' "$(cat "$STATE/pid")" "$pids" | awk 'NF && $1 != '"$$"'' | sort -u)
+  fi
+  if [ -z "$pids" ]; then
+    rm -f "$STATE/pid" "$STATE/bus" "$STATE/socket" "$STATE/display"
+    rm -f "$STATE/runtime"
+    rm -rf "$RUNTIME"
+    echo "$comp: not running"
+    return 0
+  fi
+
+  echo "$comp: stopping $(printf '%s ' $pids)"
+  for p in $pids; do kill -TERM "$p" 2>/dev/null || true; done
+  for _ in $(seq 1 50); do
+    local alive=
+    for p in $pids; do
+      kill -0 "$p" 2>/dev/null && alive=1
+    done
+    [ -z "$alive" ] && break
+    sleep 0.1
+  done
+  for p in $pids; do kill -KILL "$p" 2>/dev/null || true; done
+  rm -f "$STATE/pid" "$STATE/bus" "$STATE/socket" "$STATE/display"
+  rm -f "$STATE/runtime"
+  rm -rf "$RUNTIME"
+  echo "$comp: stopped"
+}
+
+status_session() {
+  local comp=$1 sock display
+  resolve_state "$comp"
+  if ! session_running; then
+    echo "$comp: not running (state $STATE)"
+    return 1
+  fi
+  sock=$(detect_socket 2>/dev/null || true)
+  display=$(detect_display 2>/dev/null || true)
+  printf '%s: running pid=%s wayland=%s' "$comp" "$(session_pid)" "${sock:-none}"
+  [ -n "$display" ] && printf ' display=%s' "$display"
+  printf ' runtime=%s state=%s\n' "$RUNTIME" "$STATE"
+}
+
+list_sessions() {
+  local d comp found=0
+  for d in "$ROOT"/*; do
+    [ -d "$d" ] || continue
+    comp=$(basename -- "$d")
+    found=1
+    if [ -s "$d/pid" ] && kill -0 "$(cat "$d/pid")" 2>/dev/null; then
+      status_session "$comp" || true
+    else
+      printf '%s: not running\n' "$comp"
+    fi
+  done
+  [ "$found" = 1 ] || echo "no sessions under $ROOT"
+}
+
+# ── argument parsing ─────────────────────────────────────────────────────────
+
+MODE=run
+case "${1:-}" in
+start | stop | status | list | env | exec) MODE=$1 && shift ;;
+-h | --help | help) usage && exit 0 ;;
+esac
+
+STATE_OVERRIDE=
+SESSION_ENV=()
+config_home=
+isolate_config=0
+
+case "$MODE" in
+list)
+  list_sessions
+  exit 0
+  ;;
+esac
+
+# --state may come before the compositor for status/stop/env/exec.
+if [ "${1:-}" = --state ]; then
+  [ $# -ge 2 ] || die "--state needs a directory"
+  STATE_OVERRIDE=$2
+  shift 2
+fi
+
+COMP_RAW=${1:-}
+[ -n "$COMP_RAW" ] || { usage >&2; exit 2; }
+COMP=$(normalize_comp "$COMP_RAW") || die "unknown compositor '$COMP_RAW' (hypr, kde, kwin, umbriel, niri)"
+shift || true
+
+if [ "$MODE" = stop ]; then
+  stop_session "$COMP"
+  exit 0
+fi
+if [ "$MODE" = status ]; then
+  status_session "$COMP" || exit 1
+  exit 0
+fi
+if [ "$MODE" = env ]; then
+  print_env "$COMP"
+  exit 0
+fi
+if [ "$MODE" = exec ]; then
+  [ "${1:-}" = -- ] && shift
+  [ $# -gt 0 ] || die "usage: $PROG exec $COMP -- command [args...]"
+  client_env "$COMP"
+  exec "$@"
+fi
+
+NESTED=0
+DETACH=0
+DRY=0
+EXTRA=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --nested) NESTED=1 ;;
+  --detach) DETACH=1 ;;
+  --dry-run) DRY=1 ;;
+  --state)
+    [ $# -ge 2 ] || die "--state needs a directory"
+    STATE_OVERRIDE=$2
+    shift
+    ;;
+  --config-home)
+    [ $# -ge 2 ] || die "--config-home needs a directory"
+    config_home=$2
+    shift
+    ;;
+  --isolate-config) isolate_config=1 ;;
+  --env)
+    [ $# -ge 2 ] || die "--env needs KEY=VALUE"
+    SESSION_ENV+=("$2")
+    shift
+    ;;
+  --)
+    shift
+    EXTRA=("$@")
+    break
+    ;;
+  *)
+    die "unknown option '$1' (try: $PROG --help)"
+    ;;
+  esac
+  shift
+done
+
+command -v dbus-run-session >/dev/null || die "dbus-run-session not found"
+
+start_session "$COMP" "$NESTED" "$DETACH" "$DRY" "${EXTRA[@]}"
