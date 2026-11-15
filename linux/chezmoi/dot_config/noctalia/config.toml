@@ -41,7 +41,6 @@ widget_order = [ "desktop-widget-0000000000000001", "desktop-widget-000000000000
     box_width = 224.0
     cx = 1792.0
     cy = 108.0
-    output = "eDP-1"
     placement_height = 1080.0
     placement_width = 1920.0
     rotation = 0.0
@@ -74,7 +73,6 @@ widget_order = [ "desktop-widget-0000000000000001", "desktop-widget-000000000000
     box_width = 224.0
     cx = 1792.0
     cy = 284.0
-    output = "eDP-1"
     placement_height = 1080.0
     placement_width = 1920.0
     rotation = 0.0
@@ -89,7 +87,6 @@ widget_order = [ "desktop-widget-0000000000000001", "desktop-widget-000000000000
     box_width = 224.0
     cx = 1792.0
     cy = 460.0
-    output = "eDP-1"
     placement_height = 1080.0
     placement_width = 1920.0
     rotation = 0.0
@@ -140,7 +137,6 @@ widget_order = [ "lockscreen-login-box@eDP-1", "lockscreen-widget-00000000000000
     box_width = 810.0
     cx = 960.0
     cy = 942.0
-    output = "eDP-1"
     placement_height = 1080.0
     placement_width = 1920.0
     rotation = 0.0
@@ -168,7 +164,6 @@ widget_order = [ "lockscreen-login-box@eDP-1", "lockscreen-widget-00000000000000
     box_width = 640.0
     cx = 960.0
     cy = 188.0
-    output = "eDP-1"
     placement_height = 1080.0
     placement_width = 1920.0
     rotation = 0.0
@@ -204,9 +199,6 @@ wallpaper_scheme = "m3-tonal-spot"
 path = "/home/fezjo/Pictures/wallpapers/tatsumaki.jpg"
 
 [wallpaper.last]
-path = "/home/fezjo/Pictures/wallpapers/tatsumaki.jpg"
-
-[wallpaper.monitors.eDP-1]
 path = "/home/fezjo/Pictures/wallpapers/tatsumaki.jpg"
 
 [widget.spacer_2]
