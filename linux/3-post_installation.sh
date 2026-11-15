@@ -2,23 +2,38 @@
 set -euo pipefail
 
 DRY_RUN=0
+HOST="${CONFIG_HOST:-$(hostname -s)}"
+FORM=""
+CPU=""
+
+warn() { printf '    warn: %s\n' "$*" >&2; }
 
 usage() {
     cat <<'EOF'
-usage: 3-post_installation.sh [--dry-run]
+usage: 3-post_installation.sh [--dry-run] [--host NAME]
+                              [--form laptop|desktop] [--cpu amd|intel]
 
   -n, --dry-run   show what would change without touching the system
+  --host NAME     host profile
+  --form, --cpu   override hardware detection
 EOF
 }
 
 while (( $# )); do
     case "$1" in
         -n|--dry-run) DRY_RUN=1 ;;
+        --host) HOST="${2:?--host needs a value}"; shift ;;
+        --form) FORM="${2:?--form needs a value}"; shift ;;
+        --cpu) CPU="${2:?--cpu needs a value}"; shift ;;
         -h|--help) usage; exit 0 ;;
         *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
     shift
 done
+
+export CONFIG_HOST="$HOST"
+[[ -n "$FORM" ]] && export CONFIG_FORM="$FORM"
+[[ -n "$CPU" ]] && export CONFIG_CPU="$CPU"
 
 run() {
     if (( DRY_RUN )); then
@@ -144,9 +159,31 @@ run_systemctl() {
 CONFIG="$(cd -- "$(dirname -- "$0")" && pwd)"
 CHEZMOI_CONFIG="$CONFIG/chezmoi/dot_config/chezmoi/chezmoi.toml"
 USER_NAME="${USER:-$(id -un)}"
-LOGIN_SHELL="${SHELL:-}"
+# $SHELL reflects the shell that started this script, not the login shell, and
+# stays stale after chsh. Read the authoritative value from the passwd entry.
+LOGIN_SHELL="$(getent passwd "$USER_NAME" 2>/dev/null | cut -d: -f7 || true)"
+LOGIN_SHELL="${LOGIN_SHELL:-${SHELL:-}}"
 
-warn() { printf '    warn: %s\n' "$*" >&2; }
+if command -v python3 >/dev/null 2>&1; then
+    host_args=(python3 "$CONFIG/system/hostinfo.py" --host "$HOST")
+    [[ -n "$FORM" ]] && host_args+=(--form "$FORM")
+    [[ -n "$CPU" ]] && host_args+=(--cpu "$CPU")
+    host_args+=(shell-env)
+    host_env=$("${host_args[@]}") || {
+        echo "error: cannot resolve host profile '$HOST'" >&2
+        exit 1
+    }
+    eval "$host_env"
+    export CONFIG_HOST CONFIG_FORM CONFIG_CPU CONFIG_COMPOSITOR CONFIG_SHELL
+    export CONFIG_ROLES
+else
+    warn "python3 is missing; host-specific hooks are disabled"
+    CONFIG_FORM="${FORM:-desktop}"
+    CONFIG_CPU="${CPU:-amd}"
+    CONFIG_COMPOSITOR=""
+    CONFIG_SHELL=""
+    CONFIG_ROLES=""
+fi
 
 HAVE_SSH_KEY=0
 if [ -f "$HOME/.ssh/ssh_fezjo" ]; then
@@ -158,10 +195,10 @@ else
     exit 1
 fi
 
-# DMS owns its colors/alttab/outputs/cursor fragments, not the keymap.
+# DMS owns its colors/alttab/cursor fragments, not the keymap or output layout.
 # Deploy defaults only when a fragment is missing so theme updates survive.
-if command -v dms >/dev/null 2>&1; then
-    for fragment in colors alttab outputs cursor; do
+if [[ "$CONFIG_SHELL" == dms ]] && command -v dms >/dev/null 2>&1; then
+    for fragment in colors alttab cursor; do
         if [ ! -f "$HOME/.config/niri/dms/$fragment.kdl" ]; then
             if (( DRY_RUN )); then
                 printf '    [dry-run] dms setup %s\n' "$fragment"
@@ -196,9 +233,12 @@ else
     chezmoi --config "$CHEZMOI_CONFIG" apply -S "$CONFIG/chezmoi"
 fi
 
-if [[ "$LOGIN_SHELL" != */fish ]]; then
-    if command -v fish >/dev/null 2>&1; then
-        run chsh -s "$(command -v fish)" || warn "could not change shell"
+FISH_SHELL="$(command -v fish 2>/dev/null || true)"
+if [[ -n "$FISH_SHELL" ]]; then
+    if [[ "$LOGIN_SHELL" == "$FISH_SHELL" ]]; then
+        (( DRY_RUN )) && printf '    [dry-run] chsh: login shell is %s -> no change\n' "$LOGIN_SHELL"
+    else
+        run chsh -s "$FISH_SHELL" || warn "could not change shell"
     fi
 fi
 
@@ -281,7 +321,14 @@ run sudo sysctl --system
 run sudo localectl set-x11-keymap us-sk_dia
 run_systemctl enable --now keyd
 run_systemctl restart keyd
-run_systemctl enable greetd
+run_systemctl enable greetd || warn "greetd setup failed"
+
+# Switch away from a legacy display manager without killing the running session.
+if systemctl cat lightdm.service >/dev/null 2>&1; then
+    run_systemctl disable lightdm || warn "could not disable lightdm"
+    warn "lightdm disabled; reboot to start greetd"
+fi
+
 run_systemctl enable --now systemd-oomd.socket systemd-oomd.service
 run_systemctl restart systemd-oomd.service
 
@@ -291,6 +338,23 @@ if (( DRY_RUN )); then
 else
     sudo bash "$CONFIG/system/timeshift.sh" --yes
 fi
+
+run_hook() {
+    local hook=$1
+    [[ -f "$hook" ]] || return 0
+    if (( DRY_RUN )); then
+        printf '    [dry-run] bash %s\n' "$hook"
+    else
+        bash "$hook"
+    fi
+}
+
+run_hook "$CONFIG/hooks/form/$CONFIG_FORM.sh"
+run_hook "$CONFIG/hooks/compositor/$CONFIG_COMPOSITOR.sh"
+run_hook "$CONFIG/hooks/shell/$CONFIG_SHELL.sh"
+for role in $CONFIG_ROLES; do
+    run_hook "$CONFIG/hooks/role/$role.sh"
+done
 
 # Distrobox test box: create it explicitly with `db new arch-test` when needed.
 

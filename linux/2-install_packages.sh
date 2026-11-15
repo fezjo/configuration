@@ -3,50 +3,106 @@ set -euo pipefail
 cd -- "$(dirname -- "$0")"
 
 DRY_RUN=0
-list=""
+MODE=sync
+HOST="${CONFIG_HOST:-}"
+FORM=""
+CPU=""
 
 usage() {
     cat <<'EOF'
-usage: 2-install_packages.sh [--dry-run] [LIST]
+usage: 2-install_packages.sh [--dry-run] [--host NAME] [--mode install|sync]
+                             [--form laptop|desktop] [--cpu amd|intel]
 
   -n, --dry-run   show installs, updates, and up-to-date packages
-  LIST            package list suffix, for example "niri" for packages_niri.md
+  --host NAME     host profile from .chezmoidata/hosts.toml (default: hostname)
+  --mode MODE     "sync" keeps existing boot/kernel setup; "install" adds
+                  install-only packages (default: sync)
+  --form, --cpu   override hardware detection
 EOF
 }
 
 while (( $# )); do
     case "$1" in
         -n|--dry-run) DRY_RUN=1 ;;
+        --host) HOST="${2:?--host needs a value}"; shift ;;
+        --mode) MODE="${2:?--mode needs a value}"; shift ;;
+        --form) FORM="${2:?--form needs a value}"; shift ;;
+        --cpu) CPU="${2:?--cpu needs a value}"; shift ;;
         -h|--help) usage; exit 0 ;;
-        -*) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
-        *) list="$1" ;;
+        *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
     shift
 done
 
-if [[ -n "$list" ]]; then
-    file="packages_${list}.md"
-else
-    file="packages.md"
+case "$MODE" in
+    install|sync) ;;
+    *) echo "invalid --mode: $MODE" >&2; exit 2 ;;
+esac
+
+if [[ -z "$HOST" ]]; then
+    HOST="$(hostname -s)"
 fi
-[[ -f "$file" ]] || { echo "missing $file" >&2; exit 1; }
 
-mapfile -t pkgs < <(
-    sed -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
-        -e '/^-/d' -e '/^$/d' -e 's/^+[[:space:]]*//' "$file"
-)
+command -v python3 >/dev/null 2>&1 || {
+    echo "python3 is required; run 1-pre_installation.sh first" >&2
+    exit 1
+}
 
-(( ${#pkgs[@]} )) || { echo "no packages in $file" >&2; exit 1; }
+resolver=(python3 system/hostinfo.py --host "$HOST")
+[[ -n "$FORM" ]] && resolver+=(--form "$FORM")
+[[ -n "$CPU" ]] && resolver+=(--cpu "$CPU")
+resolver+=(packages --mode "$MODE")
 
-# The list intentionally contains duplicates; keep the first occurrence.
-declare -A seen=()
-unique=()
-for pkg in "${pkgs[@]}"; do
-    [[ -n ${seen[$pkg]:-} ]] && continue
-    seen[$pkg]=1
-    unique+=("$pkg")
+mapfile -t list_files < <("${resolver[@]}")
+(( ${#list_files[@]} )) || {
+    echo "no package layers resolved for $HOST" >&2
+    exit 1
+}
+
+declare -A chosen=()
+order=()
+
+for file in "${list_files[@]}"; do
+    while IFS= read -r raw || [[ -n "$raw" ]]; do
+        line=${raw%%#*}
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [[ -n "$line" ]] || continue
+
+        sign=${line:0:1}
+        pkg=${line:1}
+        pkg="${pkg#"${pkg%%[![:space:]]*}"}"
+        pkg="${pkg%"${pkg##*[![:space:]]}"}"
+        [[ -n "$pkg" ]] || continue
+
+        case "$sign" in
+            +)
+                if [[ -z ${chosen[$pkg]:-} ]]; then
+                    order+=("$pkg")
+                fi
+                chosen[$pkg]=1
+                ;;
+            -)
+                chosen[$pkg]=0
+                ;;
+        esac
+    done < "$file"
 done
-pkgs=("${unique[@]}")
+
+pkgs=()
+for pkg in "${order[@]}"; do
+    if [[ ${chosen[$pkg]:-0} == 1 ]]; then
+        pkgs+=("$pkg")
+    fi
+done
+
+(( ${#pkgs[@]} )) || { echo "no packages selected for $HOST" >&2; exit 1; }
+
+if (( DRY_RUN )); then
+    printf 'package layers:\n'
+    printf '    %s\n' "${list_files[@]}"
+    printf '\n'
+fi
 
 if (( ! DRY_RUN )); then
     if ! command -v yay >/dev/null 2>&1; then

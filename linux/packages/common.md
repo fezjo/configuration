@@ -1,17 +1,15 @@
-# sed 's/#.*//; s/^\s*//; /^-/d; /^\s*$/d; s/^+ //' packages_niri.md | yay -S --needed -
+# Common packages for every machine.
 #
-# '+' enables a package, '-' disables it (the sed above drops disabled lines).
+# '+' enables a package, '-' disables it. Higher layers (form, cpu, compositor,
+# shell, role, host) can add packages or remove packages added here.
 
 # Most essential
-+ base-devel
-+ dux-shell
 + fish
 + helix
 + htop
 + ghostty
 + git
 + mold
-+ niri
 + iwd
 + networkmanager
 + qutebrowser
@@ -38,36 +36,12 @@
 + wl-clipboard
 + wtype
 + wlsunset
-+ brightnessctl
 - xdg-desktop-portal-wlr # not used by niri
 + xdg-desktop-portal-gnome
-+ xorg-xwayland
-+ xwayland-satellite
-
-# Niri
-+ niri
-
-## DankMaterialShell
-+ dux-shell
-+ quickshell
-+ matugen
-+ cava
-+ kimageformats
-+ adw-gtk-theme
-+ greetd
-+ greetd-agreety
-- greetd-dms-greeter-git # not currently packaged; local build later
 
 # System
-+ linux
-+ linux-headers
 + linux-firmware
-+ linux-lts
-+ linux-lts-headers
 ## Base tools
-+ arch-install-scripts
-+ base
-+ base-devel
 + man-db
 + man-pages
 + pacman-contrib
@@ -76,9 +50,9 @@
 + zram-generator
 ## Boot
 - dracut
-+ efibootmgr
-+ mkinitcpio
 ## Daemons & Services
++ greetd
++ greetd-agreety
 + gnome-keyring
 + polkit
 + polkit-gnome
@@ -120,6 +94,7 @@
 - xdg-ninja
 - antidot-bin
 + gnome-firmware
++ upower
 
 # Shell & Terminal
 ## Shells
@@ -132,7 +107,7 @@
 + foot
 + ghostty
 + kitty
-+ wezterm
++ wezterm-git
 ## Terminal Multiplexers
 + tmux
 + zellij
@@ -164,7 +139,6 @@
 + up # ultimate plumber
 ## Monitoring
 + bottom
-+ gnome-power-manager
 + htop
 + nvtop
 

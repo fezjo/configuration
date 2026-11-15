@@ -1,0 +1,4 @@
+[[file]]
+src = "root/etc/systemd/logind.conf.d/desktop-powerbutton.conf"
+dest = "/etc/systemd/logind.conf.d/powerbutton.conf"
+mode = "0644"

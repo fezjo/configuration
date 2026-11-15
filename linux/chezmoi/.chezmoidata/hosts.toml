@@ -1,0 +1,54 @@
+# Machine profiles used by both chezmoi and the Linux setup scripts.
+#
+# `form` and `cpu` are detected automatically. Set them here only to override
+# detection.
+#
+# `compositor` and `shell` are chosen per machine. Both components are kept in
+# the repo, but only the selected ones are deployed.
+#
+# Outputs are matched by connector name or by "manufacturer model serial".
+# Disconnected outputs are ignored, so a host can list outputs for more than
+# one physical location.
+
+[hosts.anna]
+form = "laptop"
+cpu = "amd"
+compositor = "umbriel"
+shell = "noctalia"
+roles = ["remote-client"]
+
+[hosts.anna.outputs.eDP-1]
+mode = "1920x1200@60"
+scale = 1.0
+x = 0
+y = 0
+
+[hosts.knut]
+form = "desktop"
+cpu = "amd"
+compositor = "niri"
+shell = "dms"
+roles = ["remote-server"]
+
+# Living room: the TV that is currently connected.
+[hosts.knut.outputs."Samsung Electric Company SAMSUNG 0x00000001"]
+mode = "1920x1080@60"
+scale = 1.0
+x = 0
+y = 0
+
+# Office: uncomment and fill the identities from `niri msg outputs` while the
+# office monitors are connected. The old config used these modes and positions,
+# but its "DisplayPort-0" connector names are not valid for current niri.
+#
+# [hosts.knut.outputs."<left monitor identity>"]
+# mode = "2560x1080@200"
+# scale = 1.0
+# x = 0
+# y = 0
+#
+# [hosts.knut.outputs."<right monitor identity>"]
+# mode = "2560x1440@165"
+# scale = 1.0
+# x = 2560
+# y = 0

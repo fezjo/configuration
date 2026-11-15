@@ -1,8 +1,9 @@
-# File-only system manifest.
+# Common file-only system manifest.
 #
-# apply.py handles only files and edits to existing files.
-# Service activation, localectl, sysctl loading, and other commands live in
-# 3-post_installation.sh.
+# apply.py merges this file with the form, CPU, compositor, shell, and role
+# manifests under system/manifests/. It handles only files and edits to
+# existing files. Service activation, localectl, sysctl loading, and other
+# commands live in 3-post_installation.sh.
 
 [[file]]
 src = "root/etc/keyd/default.conf"
@@ -15,11 +16,6 @@ dest = "/etc/sudoers.d/retries"
 mode = "0440"
 
 [[file]]
-src = "root/etc/systemd/logind.conf.d/powerbutton.conf"
-dest = "/etc/systemd/logind.conf.d/powerbutton.conf"
-mode = "0644"
-
-[[file]]
 src = "root/usr/share/X11/xkb/symbols/us-sk_dia"
 dest = "/usr/share/X11/xkb/symbols/us-sk_dia"
 mode = "0644"
@@ -27,21 +23,6 @@ mode = "0644"
 [[file]]
 src = "root/usr/include/dbg.h"
 dest = "/usr/include/dbg.h"
-mode = "0644"
-
-[[file]]
-src = "root/etc/greetd/config.toml"
-dest = "/etc/greetd/config.toml"
-mode = "0644"
-
-[[file]]
-src = "root/etc/greetd/niri/config.kdl"
-dest = "/etc/greetd/niri/config.kdl"
-mode = "0644"
-
-[[file]]
-src = "root/etc/greetd/niri/dms.kdl"
-dest = "/etc/greetd/niri/dms.kdl"
 mode = "0644"
 
 [[file]]

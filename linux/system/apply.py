@@ -15,9 +15,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, NoReturn
 
+import hostinfo
+
 BASE = Path(__file__).resolve().parent
 LINUX = BASE.parent
-DEFAULT_MANIFEST = BASE / "manifest.toml"
 
 RED = "\033[31m"
 GREEN = "\033[32m"
@@ -61,6 +62,23 @@ def load_manifest(path: Path) -> dict[str, Any]:
     except (OSError, tomllib.TOMLDecodeError) as exc:
         die(f"cannot read {path}: {exc}")
     return data
+
+
+def merge_manifests(manifests: list[dict[str, Any]]) -> dict[str, Any]:
+    """Merge layered manifests; later layers override earlier ones."""
+    files: dict[str, dict[str, Any]] = {}
+    edits: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for manifest in manifests:
+        for entry in manifest.get("file", []):
+            files[entry["dest"]] = entry
+        for entry in manifest.get("edit", []):
+            key = (
+                entry.get("file"),
+                entry.get("kind"),
+                entry.get("match") or entry.get("name"),
+            )
+            edits[key] = entry
+    return {"file": list(files.values()), "edit": list(edits.values())}
 
 
 def text_diff(old: str, new: str, fromfile: str, tofile: str) -> str:
@@ -305,7 +323,16 @@ def apply_actions(manifest: dict[str, Any], backup_root: Path, backup_enabled: b
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        action="append",
+        default=[],
+        help="use an explicit manifest instead of host-based layers (repeatable)",
+    )
+    parser.add_argument("--host", help="host profile name (default: hostname)")
+    parser.add_argument("--form", choices=("laptop", "desktop"))
+    parser.add_argument("--cpu", choices=("amd", "intel"))
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--plan", action="store_true", help="show actions and status")
     group.add_argument("--diff", action="store_true", help="show unified diffs")
@@ -341,7 +368,16 @@ def main() -> int:
     if args.apply and os.geteuid() != 0:
         die("run as root to apply system files")
 
-    manifest = filter_manifest(load_manifest(args.manifest), args.filter, args.exclude)
+    if args.manifest:
+        manifest_paths = [Path(path) for path in args.manifest]
+    else:
+        resolved = hostinfo.resolve(args.host, args.form, args.cpu)
+        manifest_paths = hostinfo.manifest_paths(resolved)
+        if not manifest_paths:
+            die("no manifests resolved for this host")
+
+    manifest = merge_manifests([load_manifest(path) for path in manifest_paths])
+    manifest = filter_manifest(manifest, args.filter, args.exclude)
     actions = collect(manifest)
     changed = [a for a in actions if a[1]]
     use_color = args.color == "always" or (

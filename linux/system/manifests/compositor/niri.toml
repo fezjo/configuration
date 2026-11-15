@@ -1,0 +1,14 @@
+[[file]]
+src = "root/etc/greetd/config-niri.toml"
+dest = "/etc/greetd/config.toml"
+mode = "0644"
+
+[[file]]
+src = "root/etc/greetd/niri/config.kdl"
+dest = "/etc/greetd/niri/config.kdl"
+mode = "0644"
+
+[[file]]
+src = "root/etc/greetd/niri/dms.kdl"
+dest = "/etc/greetd/niri/dms.kdl"
+mode = "0644"

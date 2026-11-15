@@ -1,0 +1,4 @@
+[[file]]
+src = "root/etc/greetd/config-umbriel.toml"
+dest = "/etc/greetd/config.toml"
+mode = "0644"

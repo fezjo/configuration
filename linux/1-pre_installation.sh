@@ -2,18 +2,27 @@
 set -euo pipefail
 
 DRY_RUN=0
+HOST="${CONFIG_HOST:-}"
+FORM=""
+CPU=""
 
 usage() {
     cat <<'EOF'
-usage: 1-pre_installation.sh [--dry-run]
+usage: 1-pre_installation.sh [--dry-run] [--host NAME]
+                             [--form laptop|desktop] [--cpu amd|intel]
 
   -n, --dry-run   show what would change without touching the system
+  --host NAME     host profile passed to system/apply.py
+  --form, --cpu   override hardware detection
 EOF
 }
 
 while (( $# )); do
     case "$1" in
         -n|--dry-run) DRY_RUN=1 ;;
+        --host) HOST="${2:?--host needs a value}"; shift ;;
+        --form) FORM="${2:?--form needs a value}"; shift ;;
+        --cpu) CPU="${2:?--cpu needs a value}"; shift ;;
         -h|--help) usage; exit 0 ;;
         *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
@@ -103,18 +112,23 @@ run sudo pacman -S --needed --noconfirm base-devel git mold rustup python
 # -----------------------------
 # Use the same file/edit manifest as the rest of the system so the bootstrap
 # and final apply cannot drift apart. python is installed above for apply.py.
+apply_args=(python3 "$SCRIPT_DIR/system/apply.py")
+[[ -n "$HOST" ]] && apply_args+=(--host "$HOST")
+[[ -n "$FORM" ]] && apply_args+=(--form "$FORM")
+[[ -n "$CPU" ]] && apply_args+=(--cpu "$CPU")
+apply_args+=(
+    --filter '^/etc/pacman\.conf$'
+    --filter '^/etc/makepkg\.conf\.d/'
+)
+
 if (( DRY_RUN )); then
     if command -v python3 >/dev/null 2>&1; then
-        python3 "$SCRIPT_DIR/system/apply.py" --diff \
-            --filter '^/etc/pacman\.conf$' \
-            --filter '^/etc/makepkg\.conf\.d/'
+        "${apply_args[@]}" --diff
     else
         warn "python3 is not installed; skipping the pacman/makepkg diff preview"
     fi
 else
-    sudo python3 "$SCRIPT_DIR/system/apply.py" --apply --yes \
-        --filter '^/etc/pacman\.conf$' \
-        --filter '^/etc/makepkg\.conf\.d/'
+    sudo "${apply_args[@]}" --apply --yes
 fi
 
 run rustup default stable

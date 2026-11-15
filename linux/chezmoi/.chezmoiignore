@@ -1,3 +1,33 @@
-# Temporarily do not apply this target.
+{{- $hostName := env "CONFIG_HOST" | default .chezmoi.hostname -}}
+{{- $host := index .hosts $hostName -}}
+{{- if not $host }}{{ fail (printf "unknown host %q; add [hosts.%s] to .chezmoidata/hosts.toml" $hostName $hostName) }}{{ end -}}
 # Code settings contain extension API keys.
 .config/Code/User/settings.json
+
+# Source-only shell fragments; shell.kdl is generated from these.
+.config/niri/shells/**
+
+{{ if ne $host.compositor "niri" }}
+.config/niri/**
+{{ end }}
+{{ if ne $host.compositor "umbriel" }}
+.config/umbriel/**
+.local/bin/umbriel-lid
+{{ end }}
+{{ if ne $host.shell "dms" }}
+.config/dms/**
+.config/umbriel/keybinds-dms.toml
+{{ end }}
+{{ if ne $host.shell "noctalia" }}
+.config/umbriel/keybinds-noctalia.toml
+.config/noctalia/**
+{{ end }}
+{{ if or (ne $host.compositor "niri") (ne $host.shell "dms") }}
+.config/systemd/user/niri.service.d/**
+{{ end }}
+{{ if not (has "remote-client" $host.roles) }}
+.local/bin/moonlight-knut
+.local/bin/remote-desktop
+.local/bin/clipboard-sync
+.local/share/applications/moonlight-knut.desktop
+{{ end }}
