@@ -285,13 +285,10 @@ hl.device({
 
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
--- Umbriel's keymap is column-based. These are the equivalent Hyprland
--- bindings; actions with no Hyprland equivalent are listed after the media
--- keys. Native Lua dispatchers are used where the API is stable, hyprctl for
--- the rest.
-local function hc(cmd)
-    return hl.dsp.exec_cmd("hyprctl dispatch " .. cmd)
-end
+-- Umbriel's keymap is column-based. Dwindle has no columns, so the bindings
+-- below use the closest equivalents: swapping windows, groups as tabs, and
+-- togglesplit for choosing side-by-side versus stacked. Actions with no
+-- dwindle equivalent are listed at the end of this section.
 local function nmsg(cmd)
     return hl.dsp.exec_cmd("noctalia msg " .. cmd)
 end
@@ -299,12 +296,44 @@ local function nmsg_or(cmd, fallback)
     return hl.dsp.exec_cmd("noctalia msg " .. cmd .. " 2>/dev/null || " .. fallback)
 end
 
+-- Move the focused window out of a scratchpad, back to the active workspace.
+-- Umbriel: window-restore-from-scratchpad.
+local function stash_restore()
+    local win = hl.get_active_window()
+    if not win or not win.workspace or not win.workspace.special then
+        return
+    end
+
+    local monitor = win.monitor
+    local target  = monitor and monitor.active_workspace
+    if target then
+        hl.dispatch(hl.dsp.window.move({ workspace = target.addressable_name }))
+    end
+end
+
+-- Move the focused window to or from a scratchpad.
+-- Umbriel: window-toggle-scratchpad.
+local function stash_toggle(special)
+    local win = hl.get_active_window()
+    if not win or not win.workspace then
+        return
+    end
+
+    if win.workspace.special then
+        stash_restore()
+    else
+        hl.dispatch(hl.dsp.window.move({ workspace = "special:" .. special }))
+    end
+end
+
 -- Applications and session
 hl.bind(mainMod .. " + return", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + Q", hl.dsp.window.close())
-hl.bind(mainMod .. " + CTRL + Escape", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit"))
-hl.bind(mainMod .. " + ALT + return", hl.dsp.layout("togglesplit")) -- dwindle only
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))             -- local extra
+hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.kill())
+hl.bind(mainMod .. " + CTRL + Escape", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
+-- Dwindle: flip the focused tile between side-by-side and stacked.
+hl.bind(mainMod .. " + ALT + return", hl.dsp.layout("togglesplit"))
+hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager)) -- local extra
 
 -- Universal copy/paste
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("$HOME/.local/bin/universal-clipboard copy"))
@@ -321,8 +350,8 @@ hl.bind(mainMod .. " + ALT + Escape", nmsg("session lock"))
 hl.bind(mainMod .. " + ALT + P", nmsg("panel-toggle session"))
 hl.bind(mainMod .. " + ALT + A", nmsg("screenshot-annotate"))
 hl.bind(mainMod .. " + ALT + SHIFT + A", nmsg("annotate"))
-hl.bind(mainMod .. " + ALT + O", nmsg_or("dpms-off", "hyprctl dispatch dpms off"))
-hl.bind(mainMod .. " + ALT + SHIFT + O", nmsg_or("dpms-on", "hyprctl dispatch dpms on"))
+hl.bind(mainMod .. " + ALT + O", nmsg_or("dpms-off", "hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'"))
+hl.bind(mainMod .. " + ALT + SHIFT + O", nmsg_or("dpms-on", "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'"))
 
 -- Screenshots
 hl.bind("Print", nmsg("screenshot-region"))
@@ -342,9 +371,9 @@ hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + J", hl.dsp.focus({ direction = "down" }))
 hl.bind(mainMod .. " + K", hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + L", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + F1", hc("cyclenext"))
-hl.bind("ALT + grave", hc("focuscurrentorlast"))
-hl.bind(mainMod .. " + grave", hc("workspace previous"))
+hl.bind(mainMod .. " + F1", hl.dsp.window.cycle_next())
+hl.bind("ALT + grave", hl.dsp.focus({ last = true }))
+hl.bind(mainMod .. " + grave", hl.dsp.focus({ workspace = "previous" }))
 
 -- Workspaces
 for i = 1, 9 do
@@ -360,33 +389,44 @@ hl.bind(mainMod .. " + SHIFT + Page_Up",   hl.dsp.window.move({ workspace = "e-1
 hl.bind(mainMod .. " + SHIFT + U", hl.dsp.window.move({ workspace = "e+1" }))
 hl.bind(mainMod .. " + SHIFT + I", hl.dsp.window.move({ workspace = "e-1" }))
 
--- Columns: Hyprland swaps and moves windows instead
-hl.bind(mainMod .. " + SHIFT + left",  hc("swapwindow l"))
-hl.bind(mainMod .. " + SHIFT + right", hc("swapwindow r"))
-hl.bind(mainMod .. " + SHIFT + down",  hc("movewindow d"))
-hl.bind(mainMod .. " + SHIFT + up",    hc("movewindow u"))
-hl.bind(mainMod .. " + SHIFT + H", hc("swapwindow l"))
-hl.bind(mainMod .. " + SHIFT + L", hc("swapwindow r"))
-hl.bind(mainMod .. " + SHIFT + J", hc("movewindow d"))
-hl.bind(mainMod .. " + SHIFT + K", hc("movewindow u"))
-hl.bind(mainMod .. " + SHIFT + Z", hc("centerwindow"))
-hl.bind(mainMod .. " + W", hc("togglegroup"))
-hl.bind(mainMod .. " + bracketleft",  hc("changegroupactive b"))
-hl.bind(mainMod .. " + bracketright", hc("changegroupactive f"))
+-- Dwindle has no columns. Move the window into the tile in that direction;
+-- this restructures the tree (movewindow), rather than only exchanging two
+-- neighbours. Example: the upper-right window into the lower-left slot of a
+-- tall-left/two-right layout is Mod+Shift+H then Mod+Shift+J.
+-- Use Mod+Alt+Return to choose whether the focused tile splits side by side
+-- or stacked. Mod+, / Mod+. swap with the directional neighbour instead.
+hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.move({ direction = "left" }))
+hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.move({ direction = "right" }))
+hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.move({ direction = "down" }))
+hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.move({ direction = "up" }))
+hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ direction = "left" }))
+hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ direction = "right" }))
+hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.move({ direction = "down" }))
+hl.bind(mainMod .. " + SHIFT + K", hl.dsp.window.move({ direction = "up" }))
+hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.window.center())
+
+hl.bind(mainMod .. " + W", hl.dsp.group.toggle())
+hl.bind(mainMod .. " + bracketleft",  hl.dsp.group.prev())
+hl.bind(mainMod .. " + bracketright", hl.dsp.group.next())
+hl.bind(mainMod .. " + SHIFT + bracketleft",  hl.dsp.group.move_window({ forward = false }))
+hl.bind(mainMod .. " + SHIFT + bracketright", hl.dsp.group.move_window({ forward = true }))
+hl.bind(mainMod .. " + comma",  hl.dsp.window.swap({ direction = "left" }))
+hl.bind(mainMod .. " + period", hl.dsp.window.swap({ direction = "right" }))
 
 -- Window state
 hl.bind(mainMod .. " + T", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + P", hc("pin"))
-hl.bind(mainMod .. " + M", hc("movetoworkspacesilent special:minimized"))
+hl.bind(mainMod .. " + P", hl.dsp.window.pin({ action = "toggle" }))
+hl.bind(mainMod .. " + M", function() stash_toggle("minimized") end)
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.workspace.toggle_special("minimized"))
-hl.bind(mainMod .. " + F", hc("fullscreen 1"))
-hl.bind(mainMod .. " + SHIFT + F", hc("fullscreen 0"))
+-- Umbriel: Mod+F toggles maximize, Mod+Shift+F toggles fullscreen.
+hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
 
 -- Scratchpad (Hyprland special workspace)
 hl.bind(mainMod .. " + Tab", hl.dsp.workspace.toggle_special("magic"))
-hl.bind(mainMod .. " + space", hl.dsp.window.move({ workspace = "special:magic" }))
-hl.bind(mainMod .. " + SHIFT + space", hc("movetoworkspacesilent special:magic"))
-hl.bind(mainMod .. " + CTRL + space", hl.dsp.workspace.toggle_special("magic"))
+hl.bind(mainMod .. " + space", function() stash_toggle("magic") end)
+hl.bind(mainMod .. " + SHIFT + space", hl.dsp.window.move({ workspace = "special:magic", follow = false }))
+hl.bind(mainMod .. " + CTRL + space", function() stash_restore() end)
 
 -- Mouse wheel
 hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), { repeating = false })
@@ -420,12 +460,13 @@ hl.bind(mainMod .. " + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }))
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd("fuzzel"))
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic", follow = false }))
 
--- Umbriel actions with no Hyprland equivalent:
---   overview-toggle (Mod+D / Mod+O), column first/last and extent controls,
---   column move-to-output, workspace reorder, output focus/move, tab-bar
---   toggle, shortcuts-inhibit-toggle, show-desktop, cheatsheet (Mod+Slash).
+-- Umbriel actions with no dwindle equivalent:
+--   overview-toggle (Mod+D / Mod+O), column first/last, column width and
+--   extent controls, column move-to-output, workspace reorder, output
+--   focus/move, tab-bar toggle, consume-left/right and consume-from-left/right,
+--   shortcuts-inhibit-toggle, show-desktop, cheatsheet (Mod+Slash).
 
 
 --------------------------------

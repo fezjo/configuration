@@ -48,7 +48,7 @@ lid_open = "sh -c '$HOME/.local/bin/umbriel-lid open'"
 # https://docs.noctalia.dev/umbriel/appearance/
 [appearance]
 prefer_no_csd = true
-border_width = 2
+border_width = 4
 corner_radius = 12
 
 [appearance.shadow]
@@ -94,7 +94,7 @@ sensitivity = 0.0
 "Mod+D" = { action = "overview-toggle", repeat = false }
 "Mod+O" = { action = "overview-toggle", repeat = false }
 "Mod+Q" = { action = "window-close", repeat = false }
-"Mod+Shift+Q" = { action = "window-kill", repeat = false }
+# "Mod+Shift+Q" = { action = "window-kill", repeat = false }
 "Mod+Ctrl+Escape" = "session-quit"
 "Mod+Shift+Escape" = { action = "shortcuts-inhibit-toggle", allow_when_inhibited = true, repeat = false }
 "Mod+Alt+Return" = { action = "workspace-set-layout toggle", repeat = false }
@@ -290,7 +290,7 @@ sensitivity = 0.0
 # Layout
 # https://docs.noctalia.dev/umbriel/layout/
 [layout]
-gap = 10
+gap = 5
 extent_presets = [0.333, 0.5, 0.667]
 
 [layout.scrolling]

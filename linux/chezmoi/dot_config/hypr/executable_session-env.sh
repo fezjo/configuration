@@ -81,4 +81,14 @@ if [ "$have_systemd" = 1 ]; then
   systemctl --user reset-failed xdg-desktop-portal-hyprland.service 2>/dev/null || true
   systemctl --user try-restart xdg-desktop-portal.service 2>/dev/null || true
   systemctl --user try-restart xdg-desktop-portal-hyprland.service 2>/dev/null || true
+else
+  # Without systemd the portal is D-Bus activated and may have started before
+  # the environment above was published. Stop it so the next request activates
+  # a fresh instance that sees the current compositor.
+  if command -v busctl >/dev/null 2>&1 && [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+    portal_pid=$(busctl --user status org.freedesktop.portal.Desktop 2>/dev/null | sed -n 's/^PID=//p') || true
+    if [ -n "${portal_pid:-}" ]; then
+      kill "$portal_pid" 2>/dev/null || true
+    fi
+  fi
 fi
