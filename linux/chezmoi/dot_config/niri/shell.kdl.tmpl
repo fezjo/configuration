@@ -1,0 +1,10 @@
+{{- $hostName := env "CONFIG_HOST" | default .chezmoi.hostname -}}
+{{- $host := index .hosts $hostName -}}
+{{- if not $host }}{{ fail (printf "unknown host %q" $hostName) }}{{ end -}}
+{{ if eq $host.shell "dms" -}}
+{{ include "dot_config/niri/shells/dms.kdl" }}
+{{ else if eq $host.shell "noctalia" -}}
+{{ include "dot_config/niri/shells/noctalia.kdl" }}
+{{ else -}}
+{{ fail (printf "unsupported shell %q" $host.shell) }}
+{{ end -}}

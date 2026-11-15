@@ -1,6 +1,6 @@
-// niri keybinds, included from config.kdl.
-// DMS's generated dms/binds.kdl is intentionally not included; DMS panel
-// actions and hardware keys are curated here.
+// Compositor-level niri keybinds, included from config.kdl.
+// Shell-specific actions and hardware keys are embedded into generated
+// shell.kdl from .chezmoitemplates/niri-shell-*.kdl.
 
 binds {
     // Applications and windows
@@ -158,35 +158,6 @@ binds {
     // GUI apps. Mod+Alt+V opens the DMS clipboard history.
     Mod+C { spawn-sh "$HOME/.local/bin/universal-clipboard copy"; }
     Mod+V { spawn-sh "$HOME/.local/bin/universal-clipboard paste"; }
-    Mod+Alt+V { spawn "dms" "ipc" "call" "clipboard" "toggle"; }
-
-    // DMS panel actions (Mod+Alt)
-    Mod+Alt+Space { spawn "dms" "ipc" "call" "launcher" "toggle"; }
-    Mod+Alt+N { spawn "dms" "ipc" "call" "notifications" "toggle"; }
-    Mod+Alt+M { spawn "dms" "ipc" "call" "processlist" "focusOrToggle"; }
-    Mod+Alt+S { spawn "dms" "ipc" "call" "settings" "focusOrToggle"; }
-    Mod+Alt+W { spawn "dms" "ipc" "call" "dankdash" "wallpaper"; }
-    Mod+Alt+L { spawn "dms" "ipc" "call" "lock" "lock"; }
-    Mod+Alt+P { spawn "dms" "ipc" "call" "powermenu" "toggle"; }
-    Mod+Alt+R { spawn "dms" "ipc" "call" "workspace-rename" "open"; }
-    Mod+Alt+E { spawn "dms" "ipc" "call" "notepad" "toggle"; }
-    Mod+Alt+Shift+W { spawn "dms" "ipc" "call" "window-rules" "toggle"; }
-    // DMS task manager, same key as stock DMS.
-    Ctrl+Alt+Delete { spawn "dms" "ipc" "call" "processlist" "focusOrToggle"; }
-
-    // Hardware keys, active while locked.
-    XF86AudioRaiseVolume allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "increment" "3"; }
-    XF86AudioLowerVolume allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "decrement" "3"; }
-    XF86AudioMute allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "mute"; }
-    XF86AudioMicMute allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "micmute"; }
-    XF86AudioPlay allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "playPause"; }
-    XF86AudioPause allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "playPause"; }
-    XF86AudioNext allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "next"; }
-    XF86AudioPrev allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "previous"; }
-    Ctrl+XF86AudioRaiseVolume allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "increment" "3"; }
-    Ctrl+XF86AudioLowerVolume allow-when-locked=true { spawn "dms" "ipc" "call" "mpris" "decrement" "3"; }
-    XF86MonBrightnessUp allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "increment" "5" ""; }
-    XF86MonBrightnessDown allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "decrement" "5" ""; }
 
     // Floating and tiling
     Mod+Space       { toggle-window-floating; }
@@ -195,11 +166,6 @@ binds {
     // Tabbed columns
     // Windows in the column appear as vertical tabs instead of stacking.
     Mod+W { toggle-column-tabbed-display; }
-
-    // Screenshots
-    Print { screenshot; }
-    Ctrl+Print { screenshot-screen; }
-    Mod+Print { screenshot-window; }
 
     // Session and power
     // Remote-desktop clients can request that niri stop processing shortcuts.

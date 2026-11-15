@@ -1,0 +1,9 @@
+{{- $hostName := env "CONFIG_HOST" | default .chezmoi.hostname -}}
+{{- $host := index .hosts $hostName -}}
+{{- if not $host }}{{ fail (printf "unknown host %q" $hostName) }}{{ end -}}
+{{ range $name, $output := $host.outputs }}
+[output."{{ $name }}"]
+mode = "{{ $output.mode }}"
+position = [{{ $output.x }}, {{ $output.y }}]
+scale = {{ $output.scale }}
+{{ end }}

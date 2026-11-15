@@ -1,0 +1,35 @@
+// Noctalia shell configuration for niri: startup and keybinds.
+// Source-only: embedded into generated shell.kdl when Noctalia is selected.
+
+spawn-at-startup "noctalia"
+
+binds {
+    // Noctalia shell and session
+    Mod+Alt+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+Alt+V { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
+    Mod+Alt+N { spawn "noctalia" "msg" "panel-toggle" "notifications"; }
+    Mod+Alt+C { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
+    Mod+Alt+S { spawn "noctalia" "msg" "settings-toggle"; }
+    Mod+Alt+Escape { spawn "noctalia" "msg" "session" "lock"; }
+    Mod+Alt+P { spawn "noctalia" "msg" "panel-toggle" "session"; }
+    Mod+Alt+A { spawn "noctalia" "msg" "screenshot-annotate"; }
+    Mod+Alt+Shift+A { spawn "noctalia" "msg" "annotate"; }
+    Mod+Alt+W { spawn "noctalia" "msg" "panel-toggle" "wallpaper"; }
+
+    // Screenshots
+    Print { spawn "noctalia" "msg" "screenshot-region"; }
+    Ctrl+Print { spawn "noctalia" "msg" "screenshot-fullscreen"; }
+    Mod+Print { spawn "noctalia" "msg" "screenshot-window"; }
+
+    // Media, volume and brightness keys.
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-up"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-down"; }
+    XF86AudioMute allow-when-locked=true { spawn "noctalia" "msg" "volume-mute"; }
+    XF86AudioMicMute allow-when-locked=true { spawn "noctalia" "msg" "mic-mute"; }
+    XF86AudioPlay allow-when-locked=true { spawn "noctalia" "msg" "media" "toggle"; }
+    XF86AudioPause allow-when-locked=true { spawn "noctalia" "msg" "media" "toggle"; }
+    XF86AudioNext allow-when-locked=true { spawn "noctalia" "msg" "media" "next"; }
+    XF86AudioPrev allow-when-locked=true { spawn "noctalia" "msg" "media" "previous"; }
+    XF86MonBrightnessUp allow-when-locked=true { spawn "noctalia" "msg" "brightness-up"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "noctalia" "msg" "brightness-down"; }
+}

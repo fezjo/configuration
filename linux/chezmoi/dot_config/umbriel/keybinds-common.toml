@@ -1,0 +1,161 @@
+[keybinds]
+
+# Applications and session
+"Mod+Return" = { action = "spawn ghostty", repeat = false }
+"Mod+D" = { action = "overview-toggle", repeat = false }
+"Mod+O" = { action = "overview-toggle", repeat = false }
+"Mod+Q" = { action = "window-close", repeat = false }
+# "Mod+Shift+Q" = { action = "window-kill", repeat = false }
+"Mod+Ctrl+Escape" = "session-quit"
+"Mod+Shift+Escape" = { action = "shortcuts-inhibit-toggle", allow_when_inhibited = true, repeat = false }
+"Mod+Alt+Return" = { action = "workspace-set-layout toggle", repeat = false }
+
+# Universal copy/paste
+"Mod+C" = { action = "spawn $HOME/.local/bin/universal-clipboard copy", repeat = false }
+"Mod+V" = { action = "spawn $HOME/.local/bin/universal-clipboard paste", repeat = false }
+
+# Focus
+"Mod+Left" = "window-focus-left"
+"Mod+Down" = "window-focus-down"
+"Mod+Up" = "window-focus-up"
+"Mod+Right" = "window-focus-right"
+"Mod+H" = "window-focus-left"
+"Mod+J" = "window-focus-down"
+"Mod+K" = "window-focus-up"
+"Mod+L" = "window-focus-right"
+"Mod+F1" = "window-focus-next"
+"Mod+Home" = "column-focus-first"
+"Mod+End" = "column-focus-last"
+"Alt+grave" = { action = "window-focus-last", repeat = false }
+"Mod+grave" = { action = "workspace-focus-last", repeat = false }
+
+# Workspaces
+"Mod+1" = "workspace-switch 1"
+"Mod+2" = "workspace-switch 2"
+"Mod+3" = "workspace-switch 3"
+"Mod+4" = "workspace-switch 4"
+"Mod+5" = "workspace-switch 5"
+"Mod+6" = "workspace-switch 6"
+"Mod+7" = "workspace-switch 7"
+"Mod+8" = "workspace-switch 8"
+"Mod+9" = "workspace-switch 9"
+"Mod+Page_Down" = "workspace-next"
+"Mod+Page_Up" = "workspace-previous"
+"Mod+U" = "workspace-next"
+"Mod+I" = "workspace-previous"
+"Mod+Shift+1" = "column-move-to-workspace 1"
+"Mod+Shift+2" = "column-move-to-workspace 2"
+"Mod+Shift+3" = "column-move-to-workspace 3"
+"Mod+Shift+4" = "column-move-to-workspace 4"
+"Mod+Shift+5" = "column-move-to-workspace 5"
+"Mod+Shift+6" = "column-move-to-workspace 6"
+"Mod+Shift+7" = "column-move-to-workspace 7"
+"Mod+Shift+8" = "column-move-to-workspace 8"
+"Mod+Shift+9" = "column-move-to-workspace 9"
+"Mod+Shift+Page_Down" = "column-move-to-workspace-next"
+"Mod+Shift+Page_Up" = "column-move-to-workspace-previous"
+"Mod+Shift+U" = "column-move-to-workspace-next"
+"Mod+Shift+I" = "column-move-to-workspace-previous"
+"Mod+Ctrl+Page_Down" = "workspace-move-down"
+"Mod+Ctrl+Page_Up" = "workspace-move-up"
+"Mod+Ctrl+U" = "workspace-move-down"
+"Mod+Ctrl+I" = "workspace-move-up"
+
+# Displays
+"Mod+Alt+Left" = "output-focus-left"
+"Mod+Alt+Down" = "output-focus-down"
+"Mod+Alt+Up" = "output-focus-up"
+"Mod+Alt+Right" = "output-focus-right"
+"Mod+Alt+H" = "output-focus-left"
+"Mod+Alt+J" = "output-focus-down"
+"Mod+Alt+K" = "output-focus-up"
+"Mod+Alt+L" = "output-focus-right"
+"Mod+Alt+Tab" = { action = "scratchpad-focus-next", repeat = false }
+"Mod+Alt+Page_Down" = "output-focus-next"
+"Mod+Alt+Page_Up" = "output-focus-previous"
+"Mod+Alt+U" = "output-focus-next"
+"Mod+Alt+I" = "output-focus-previous"
+"Mod+Alt+Shift+Left" = "column-move-to-output-left"
+"Mod+Alt+Shift+Down" = "column-move-to-output-down"
+"Mod+Alt+Shift+Up" = "column-move-to-output-up"
+"Mod+Alt+Shift+Right" = "column-move-to-output-right"
+"Mod+Alt+Shift+H" = "column-move-to-output-left"
+"Mod+Alt+Shift+J" = "column-move-to-output-down"
+"Mod+Alt+Shift+K" = "column-move-to-output-up"
+"Mod+Alt+Shift+L" = "column-move-to-output-right"
+"Mod+Alt+Ctrl+Left" = "workspace-move-to-output-left"
+"Mod+Alt+Ctrl+Down" = "workspace-move-to-output-down"
+"Mod+Alt+Ctrl+Up" = "workspace-move-to-output-up"
+"Mod+Alt+Ctrl+Right" = "workspace-move-to-output-right"
+"Mod+Alt+Ctrl+H" = "workspace-move-to-output-left"
+"Mod+Alt+Ctrl+J" = "workspace-move-to-output-down"
+"Mod+Alt+Ctrl+K" = "workspace-move-to-output-up"
+"Mod+Alt+Ctrl+L" = "workspace-move-to-output-right"
+"Mod+Alt+Ctrl+Page_Down" = "workspace-move-to-output-next"
+"Mod+Alt+Ctrl+Page_Up" = "workspace-move-to-output-previous"
+"Mod+Alt+Ctrl+U" = "workspace-move-to-output-next"
+"Mod+Alt+Ctrl+I" = "workspace-move-to-output-previous"
+
+# Columns
+"Mod+Shift+Left" = "column-move-left"
+"Mod+Shift+Down" = "window-move-down"
+"Mod+Shift+Up" = "window-move-up"
+"Mod+Shift+Right" = "column-move-right"
+"Mod+Shift+H" = "column-move-left"
+"Mod+Shift+J" = "window-move-down"
+"Mod+Shift+K" = "window-move-up"
+"Mod+Shift+L" = "column-move-right"
+"Mod+Shift+Home" = "column-move-to-first"
+"Mod+Shift+End" = "column-move-to-last"
+"Mod+Shift+Z" = { action = "column-center", repeat = false }
+"Mod+W" = { action = "column-toggle-tabbed", repeat = false }
+"Mod+Shift+W" = { action = "column-toggle-tab-bar", repeat = false }
+"Mod+BracketLeft" = "column-focus-tab-previous"
+"Mod+BracketRight" = "column-focus-tab-next"
+"Mod+Shift+BracketLeft" = "column-move-tab-previous"
+"Mod+Shift+BracketRight" = "column-move-tab-next"
+"Mod+R" = "window-cycle-primary-extent"
+"Mod+Shift+R" = "window-cycle-secondary-extent"
+"Mod+Minus" = "window-modify-primary-extent -0.02"
+"Mod+Equal" = "window-modify-primary-extent +0.02"
+"Mod+Shift+Minus" = "window-modify-secondary-extent -0.02"
+"Mod+Shift+Equal" = "window-modify-secondary-extent +0.02"
+"Mod+Comma" = "window-consume-or-expel-left"
+"Mod+Period" = "window-consume-or-expel-right"
+"Mod+Ctrl+Comma" = "window-consume-left"
+"Mod+Ctrl+Period" = "window-consume-right"
+"Mod+Shift+Comma" = "window-consume-from-left"
+"Mod+Shift+Period" = "window-consume-from-right"
+
+# Window state
+"Mod+T" = { action = "window-toggle-floating", repeat = false }
+"Mod+Shift+T" = { action = "window-focus-switch-floating", repeat = false }
+"Mod+P" = { action = "window-toggle-pinned", repeat = false }
+"Mod+M" = { action = "window-minimize", repeat = false }
+"Mod+F" = { action = "window-toggle-maximize", repeat = false }
+"Mod+Ctrl+F" = { action = "window-toggle-maximize-to-edges", repeat = false }
+"Mod+Shift+F" = { action = "window-toggle-fullscreen", repeat = false }
+"Mod+Shift+M" = { action = "window-restore-minimized", repeat = false }
+
+# Scratchpad
+"Mod+Tab" = "scratchpad-toggle"
+"Mod+Space" = { action = "window-toggle-scratchpad", repeat = false }
+"Mod+Shift+Space" = { action = "window-move-to-scratchpad", repeat = false }
+"Mod+Ctrl+Space" = { action = "window-restore-from-scratchpad", repeat = false }
+
+# Mouse wheel
+"Mod+WheelUp" = { action = "workspace-previous", cooldown_ms = 150 }
+"Mod+WheelDown" = { action = "workspace-next", cooldown_ms = 150 }
+"Mod+WheelLeft" = { action = "window-focus-left", cooldown_ms = 150 }
+"Mod+WheelRight" = { action = "window-focus-right", cooldown_ms = 150 }
+"Mod+Shift+WheelUp" = { action = "window-focus-left", cooldown_ms = 150 }
+"Mod+Shift+WheelDown" = { action = "window-focus-right", cooldown_ms = 150 }
+"Mod+Ctrl+WheelUp" = { action = "workspace-move-up", cooldown_ms = 150 }
+"Mod+Ctrl+WheelDown" = { action = "workspace-move-down", cooldown_ms = 150 }
+"Mod+Alt+WheelUp" = { action = "output-focus-previous", cooldown_ms = 150 }
+"Mod+Alt+WheelDown" = { action = "output-focus-next", cooldown_ms = 150 }
+"Mod+Alt+Ctrl+WheelUp" = { action = "workspace-move-to-output-previous", cooldown_ms = 150 }
+"Mod+Alt+Ctrl+WheelDown" = { action = "workspace-move-to-output-next", cooldown_ms = 150 }
+
+# System
+"Mod+Slash" = { action = "cheatsheet-toggle", repeat = false }

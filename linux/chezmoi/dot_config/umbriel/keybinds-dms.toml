@@ -1,0 +1,32 @@
+[keybinds]
+
+# DMS shell actions.
+"Mod+Alt+Space" = { action = "spawn dms ipc call launcher toggle", repeat = false }
+"Mod+Alt+V" = { action = "spawn dms ipc call clipboard toggle", repeat = false }
+"Mod+Alt+N" = { action = "spawn dms ipc call notifications toggle", repeat = false }
+"Mod+Alt+M" = { action = "spawn dms ipc call processlist focusOrToggle", repeat = false }
+"Mod+Alt+S" = { action = "spawn dms ipc call settings focusOrToggle", repeat = false }
+"Mod+Alt+W" = { action = "spawn dms ipc call dankdash wallpaper", repeat = false }
+"Mod+Alt+Escape" = { action = "spawn dms ipc call lock lock", repeat = false }
+"Mod+Alt+P" = { action = "spawn dms ipc call powermenu toggle", repeat = false }
+"Mod+Alt+R" = { action = "spawn dms ipc call workspace-rename open", repeat = false }
+"Mod+Alt+E" = { action = "spawn dms ipc call notepad toggle", repeat = false }
+"Mod+Alt+Shift+W" = { action = "spawn dms ipc call window-rules toggle", repeat = false }
+"Ctrl+Alt+Delete" = { action = "spawn dms ipc call processlist focusOrToggle", repeat = false }
+
+# Screenshots.
+"Print" = { action = "spawn dms screenshot region", repeat = false }
+"Ctrl+Print" = { action = "spawn dms screenshot full", repeat = false }
+"Mod+Print" = { action = "spawn dms screenshot window", repeat = false }
+
+# Hardware keys, safe while locked.
+"XF86AudioRaiseVolume" = { action = "spawn dms ipc call audio increment 3", allow_when_locked = true }
+"XF86AudioLowerVolume" = { action = "spawn dms ipc call audio decrement 3", allow_when_locked = true }
+"XF86AudioMute" = { action = "spawn dms ipc call audio mute", allow_when_locked = true, repeat = false }
+"XF86AudioMicMute" = { action = "spawn dms ipc call audio micmute", allow_when_locked = true, repeat = false }
+"XF86AudioPlay" = { action = "spawn dms ipc call mpris playPause", allow_when_locked = true, repeat = false }
+"XF86AudioPause" = { action = "spawn dms ipc call mpris playPause", allow_when_locked = true, repeat = false }
+"XF86AudioNext" = { action = "spawn dms ipc call mpris next", allow_when_locked = true }
+"XF86AudioPrev" = { action = "spawn dms ipc call mpris previous", allow_when_locked = true }
+"XF86MonBrightnessUp" = { action = "spawn dms ipc call brightness increment 5", allow_when_locked = true }
+"XF86MonBrightnessDown" = { action = "spawn dms ipc call brightness decrement 5", allow_when_locked = true }

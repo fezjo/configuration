@@ -1,0 +1,14 @@
+{{- $hostName := env "CONFIG_HOST" | default .chezmoi.hostname -}}
+{{- $host := index .hosts $hostName -}}
+{{- if not $host }}{{ fail (printf "unknown host %q" $hostName) }}{{ end -}}
+[include]
+files = ["keybinds-common.toml", "keybinds-{{ $host.shell }}.toml"]
+
+[general]
+{{ if eq $host.shell "noctalia" -}}
+autostart = ["noctalia"]
+{{ else if eq $host.shell "dms" -}}
+autostart = ["dms run"]
+{{ else -}}
+{{ fail (printf "unsupported shell %q" $host.shell) }}
+{{ end -}}
