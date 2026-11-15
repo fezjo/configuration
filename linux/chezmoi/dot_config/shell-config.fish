@@ -1,4 +1,10 @@
 # Integrations for fish. Source after the environment.
+
+# Reuse the POSIX alias file instead of maintaining a second fish list.
+if type -q basrs
+    basrs source $HOME/.config/shell/aliases.sh | source
+end
+
 if type -q mise
     mise activate fish | source
 end
