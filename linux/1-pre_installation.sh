@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+. "$(dirname -- "$0")/system/lib.sh"
+
 DRY_RUN=0
 HOST="${CONFIG_HOST:-}"
 FORM=""
@@ -17,27 +19,8 @@ usage: 1-pre_installation.sh [--dry-run] [--host NAME]
 EOF
 }
 
-while (( $# )); do
-    case "$1" in
-        -n|--dry-run) DRY_RUN=1 ;;
-        --host) HOST="${2:?--host needs a value}"; shift ;;
-        --form) FORM="${2:?--form needs a value}"; shift ;;
-        --cpu) CPU="${2:?--cpu needs a value}"; shift ;;
-        -h|--help) usage; exit 0 ;;
-        *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
-    esac
-    shift
-done
-
-run() {
-    if (( DRY_RUN )); then
-        printf '    [dry-run] %s\n' "$*"
-        return 0
-    fi
-    "$@"
-}
-
-warn() { printf '    warn: %s\n' "$*" >&2; }
+CLI_USAGE=usage
+parse_args "$@"
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 
@@ -133,7 +116,7 @@ fi
 
 run rustup default stable
 
-run sudo pacman -S --needed --noconfirm fish helix htop ghostty
+run sudo pacman -S --needed --noconfirm fish helix-git htop ghostty
 
 if ! command -v yay >/dev/null 2>&1; then
     if (( DRY_RUN )); then

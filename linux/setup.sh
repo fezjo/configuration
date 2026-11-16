@@ -2,9 +2,11 @@
 set -euo pipefail
 cd -- "$(dirname -- "$0")"
 
+. "$(dirname -- "$0")/system/lib.sh"
+
 MODE=install
 DRY_RUN=0
-HOST="${CONFIG_HOST:-$(hostname -s)}"
+HOST="${CONFIG_HOST:-$(short_hostname)}"
 FORM=""
 CPU=""
 
@@ -24,20 +26,9 @@ usage: setup.sh [install|sync|plan] [--dry-run] [--host NAME]
 EOF
 }
 
-die() { printf 'error: %s\n' "$*" >&2; exit 1; }
-
-while (( $# )); do
-    case "$1" in
-        install|sync|plan) MODE="$1" ;;
-        -n|--dry-run) DRY_RUN=1 ;;
-        --host) HOST="${2:?--host needs a value}"; shift ;;
-        --form) FORM="${2:?--form needs a value}"; shift ;;
-        --cpu) CPU="${2:?--cpu needs a value}"; shift ;;
-        -h|--help) usage; exit 0 ;;
-        *) die "unknown argument: $1" ;;
-    esac
-    shift
-done
+CLI_USAGE=usage
+CLI_POSITIONAL_MODES=1
+parse_args "$@"
 
 if [[ $EUID -eq 0 ]]; then
     die "run setup.sh as your user, not as root"
@@ -50,8 +41,8 @@ esac
 
 [[ "$MODE" == plan ]] && DRY_RUN=1
 
-if (( ! DRY_RUN )) && [[ "$HOST" != "$(hostname -s)" ]]; then
-    die "refusing to apply host profile '$HOST' on '$(hostname -s)'"
+if (( ! DRY_RUN )) && [[ "$HOST" != "$(short_hostname)" ]]; then
+    die "refusing to apply host profile '$HOST' on '$(short_hostname)'"
 fi
 
 common_args=(--host "$HOST")

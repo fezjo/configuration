@@ -1,12 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
+. "$(dirname -- "$0")/system/lib.sh"
+
 DRY_RUN=0
-HOST="${CONFIG_HOST:-$(hostname -s)}"
+HOST="${CONFIG_HOST:-$(short_hostname)}"
 FORM=""
 CPU=""
-
-warn() { printf '    warn: %s\n' "$*" >&2; }
 
 usage() {
     cat <<'EOF'
@@ -19,29 +19,12 @@ usage: 3-post_installation.sh [--dry-run] [--host NAME]
 EOF
 }
 
-while (( $# )); do
-    case "$1" in
-        -n|--dry-run) DRY_RUN=1 ;;
-        --host) HOST="${2:?--host needs a value}"; shift ;;
-        --form) FORM="${2:?--form needs a value}"; shift ;;
-        --cpu) CPU="${2:?--cpu needs a value}"; shift ;;
-        -h|--help) usage; exit 0 ;;
-        *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
-    esac
-    shift
-done
+CLI_USAGE=usage
+parse_args "$@"
 
 export CONFIG_HOST="$HOST"
 [[ -n "$FORM" ]] && export CONFIG_FORM="$FORM"
 [[ -n "$CPU" ]] && export CONFIG_CPU="$CPU"
-
-run() {
-    if (( DRY_RUN )); then
-        printf '    [dry-run] %s\n' "$*"
-        return 0
-    fi
-    "$@"
-}
 
 declare -A PREDICTED_ENABLED=()
 declare -A PREDICTED_ACTIVE=()

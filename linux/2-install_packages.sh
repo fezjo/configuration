@@ -2,6 +2,8 @@
 set -euo pipefail
 cd -- "$(dirname -- "$0")"
 
+. "$(dirname -- "$0")/system/lib.sh"
+
 DRY_RUN=0
 MODE=sync
 HOST="${CONFIG_HOST:-}"
@@ -21,18 +23,9 @@ usage: 2-install_packages.sh [--dry-run] [--host NAME] [--mode install|sync]
 EOF
 }
 
-while (( $# )); do
-    case "$1" in
-        -n|--dry-run) DRY_RUN=1 ;;
-        --host) HOST="${2:?--host needs a value}"; shift ;;
-        --mode) MODE="${2:?--mode needs a value}"; shift ;;
-        --form) FORM="${2:?--form needs a value}"; shift ;;
-        --cpu) CPU="${2:?--cpu needs a value}"; shift ;;
-        -h|--help) usage; exit 0 ;;
-        *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
-    esac
-    shift
-done
+CLI_USAGE=usage
+CLI_MODE_FLAG=1
+parse_args "$@"
 
 case "$MODE" in
     install|sync) ;;
@@ -40,7 +33,7 @@ case "$MODE" in
 esac
 
 if [[ -z "$HOST" ]]; then
-    HOST="$(hostname -s)"
+    HOST="$(short_hostname)"
 fi
 
 command -v python3 >/dev/null 2>&1 || {
