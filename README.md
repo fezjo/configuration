@@ -4,14 +4,17 @@ Personal configuration for Arch Linux, macOS, and Windows.
 
 ## Machines
 
-| Host | Form | CPU | Compositor | Shell | Role |
-|---|---|---|---|---|---|
-| `anna` | laptop | AMD 4750U | Umbriel | Noctalia | remote-desktop client |
-| `knut` | desktop | AMD 7950X | niri | DMS | remote-desktop server |
+| Host | Form | CPU | Compositor | Shell |
+|---|---|---|---|---|
+| `anna` | laptop | AMD 4750U | Umbriel | Noctalia |
+| `knut` | desktop | AMD 7950X | niri | DMS |
 
 Machine profiles live in `linux/chezmoi/.chezmoidata/hosts.toml`. They select
-the compositor, shell, roles, and output layout. Form factor and CPU vendor are
+the compositor, shell, and output layout. Form factor and CPU vendor are
 detected automatically when not set in the profile.
+
+Remote-desktop setup is opt-in and lives in `linux/remote/`; it is not part of
+a host profile.
 
 Compositors and shells are independent. Both `niri`/`DMS` and
 `Umbriel`/Noctalia remain in the repo; each machine deploys only what it
@@ -31,7 +34,6 @@ linux/
     cpu/{amd,intel}.md
     compositor/{niri,umbriel}.md
     shell/{dms,noctalia}.md
-    role/{remote-client,remote-server}.md
     host/knut.md
   system/
     apply.py                  layered system file manifest runner
@@ -118,7 +120,6 @@ form/<detected>
 cpu/<detected>
 compositor/<selected>
 shell/<selected>
-role/<selected roles>
 host/<hostname>
 ```
 
@@ -283,8 +284,9 @@ checks that `basrs` exposes the `dyff` alias when `basrs` is available.
 ## Remote desktop
 
 `linux/remote/` contains the reproducible server (`knut`) and client (`anna`)
-setup. The `remote-server` and `remote-client` roles run their installers from
-`3-post_installation.sh`.
+setup. It is opt-in: run `remote/server/install.sh` on `knut` and
+`remote/client/install.sh` on `anna` after the base setup. The base setup does
+not install the remote packages or helpers.
 
 ## Archive
 

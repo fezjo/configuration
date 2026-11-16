@@ -4,7 +4,8 @@ All commands run on `knut` as the desktop user unless marked `sudo`.
 
 ## Packages
 
-`packages.txt` lists the explicit packages. Summary:
+`packages.txt` lists the explicit packages, and `install.sh` installs them
+unless you pass `--no-packages`. Summary:
 
 | Package | Purpose |
 |---|---|
@@ -227,7 +228,8 @@ SSH.
 ## 8. Install order
 
 ```sh
-./install.sh
+./install.sh                  # packages, units, scripts, Umbriel config
+# ./install.sh --no-packages  # files only
 
 # build patched WayVNC (section 3)
 install -m755 build/wayvnc "$HOME/.local/bin/wayvnc-niri"

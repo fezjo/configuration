@@ -1,5 +1,6 @@
 # Explicit packages installed on knut for remote access.
-# Install with your AUR helper; sunshine-bin and umbriel-git are AUR packages.
+# install.sh installs these unless you pass --no-packages.
+# sunshine-bin and umbriel-git are AUR packages.
 
 niri
 umbriel-git

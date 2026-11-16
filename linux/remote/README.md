@@ -2,6 +2,9 @@
 
 Reproducible configuration for remote access to `knut` from `anna`.
 
+This is opt-in. The base machine setup (`setup.sh` and the package layers) does
+not install any of it; run the matching `install.sh` on each machine.
+
 Three transports are supported:
 
 | Target | Server | Client | Transport | Port |
@@ -30,6 +33,7 @@ right choice there.
 ```
 remote/
 ├── README.md                  this file
+├── lib.sh                     shared installer helpers
 ├── server/                    changes on knut
 │   ├── README.md
 │   ├── packages.txt
@@ -43,6 +47,7 @@ remote/
 │   └── wayvnc/                linear DMA-BUF patch + build notes
 └── client/                    changes on anna
     ├── README.md
+    ├── packages.txt
     ├── install.sh
     ├── bin/                   remote-desktop, clipboard-sync, moonlight-knut
     ├── applications/          desktop entry
@@ -54,7 +59,8 @@ remote/
 
 ```sh
 cd server
-./install.sh                  # user units, scripts, Umbriel config
+./install.sh                  # packages.txt, user units, scripts, Umbriel config
+# ./install.sh --no-packages  # files only
 sudo ./firewall.sh            # Sunshine ports
 # build the patched WayVNC, see server/wayvnc/README.md
 
@@ -66,14 +72,15 @@ systemctl --user enable --now sunshine-mod-watch.service
 intentionally **not** enabled at boot. `remote-desktop setup` starts them on
 demand and `teardown` stops them again.
 
-Requires `niri` 26.04 and the packages listed in `server/packages.txt`.
+Requires `niri` 26.04. `install.sh` installs `server/packages.txt`.
 See `server/README.md` for the full walkthrough.
 
 ## Client reproduction (anna)
 
 ```sh
 cd client
-./install.sh                  # remote-desktop, moonlight-knut, desktop entry
+./install.sh                  # packages.txt, remote-desktop, moonlight-knut
+# ./install.sh --no-packages  # files only
 # build the patched wlvncc, see client/wlvncc/README.md
 ```
 

@@ -25,9 +25,3 @@
 {{ if or (ne $host.compositor "niri") (ne $host.shell "dms") }}
 .config/systemd/user/niri.service.d/**
 {{ end }}
-{{ if not (has "remote-client" $host.roles) }}
-.local/bin/moonlight-knut
-.local/bin/remote-desktop
-.local/bin/clipboard-sync
-.local/share/applications/moonlight-knut.desktop
-{{ end }}

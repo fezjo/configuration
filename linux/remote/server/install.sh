@@ -8,6 +8,31 @@ bindir=${BINDIR:-$HOME/.local/bin}
 unitdir=${UNITDIR:-$HOME/.config/systemd/user}
 appdir=${APPDIR:-$HOME/.local/share/applications}
 
+. "$here/../lib.sh"
+
+INSTALL_PACKAGES=1
+
+usage() {
+    cat <<'EOF'
+usage: install.sh [--no-packages]
+
+  --no-packages   install the helper scripts but skip packages.txt
+EOF
+}
+
+while (( $# )); do
+    case "$1" in
+        --no-packages) INSTALL_PACKAGES=0 ;;
+        -h|--help) usage; exit 0 ;;
+        *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
+    esac
+    shift
+done
+
+if (( INSTALL_PACKAGES )); then
+    install_packages "$here/packages.txt"
+fi
+
 install -d "$bindir" "$unitdir" "$appdir" \
     "$HOME/.config/umbriel" "$HOME/.config/sunshine"
 

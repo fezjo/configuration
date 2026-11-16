@@ -2,6 +2,8 @@
 
 ## Packages
 
+`packages.txt` lists what `install.sh` installs. Summary:
+
 - `moonlight-qt` — Moonlight 6.2.0
 - `wl-clipboard` — `wl-copy`/`wl-paste`, used for clipboard sync
 - `wlvncc` — Wayland VNC client (build locally with the pacing patch)
@@ -15,7 +17,8 @@ cd client
 ./install.sh
 ```
 
-This installs:
+This installs the packages from `packages.txt` (skip them with
+`./install.sh --no-packages`) and these files:
 
 | Source | Destination |
 |---|---|
@@ -24,15 +27,7 @@ This installs:
 | `bin/moonlight-knut` | `~/.local/bin/moonlight-knut` |
 | `applications/moonlight-knut.desktop` | `~/.local/share/applications/moonlight-knut.desktop` |
 
-`remote-desktop` and `clipboard-sync` are also tracked by chezmoi:
-
-```sh
-chezmoi add ~/.local/bin/remote-desktop ~/.local/bin/clipboard-sync
-chezmoi status
-```
-
-Add `moonlight-knut` and its desktop entry the same way if you want them
-managed too.
+These helpers are installed only by this script; chezmoi does not manage them.
 
 ## 2. Build the patched wlvncc
 

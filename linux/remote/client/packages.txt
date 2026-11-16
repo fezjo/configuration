@@ -1,0 +1,7 @@
+# Explicit packages for the remote-desktop client.
+#
+# wlvncc is built locally from client/wlvncc; see README.md.
+moonlight-qt
+wl-clipboard
+openssh
+openbsd-netcat

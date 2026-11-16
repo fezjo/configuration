@@ -9,13 +9,15 @@
 # Outputs are matched by connector name or by "manufacturer model serial".
 # Disconnected outputs are ignored, so a host can list outputs for more than
 # one physical location.
+#
+# Remote-desktop packages and wiring are opt-in: install them explicitly from
+# remote/ (see remote/README.md), not through a host profile.
 
 [hosts.anna]
 form = "laptop"
 cpu = "amd"
 compositor = "umbriel"
 shell = "noctalia"
-roles = ["remote-client"]
 
 [hosts.anna.outputs.eDP-1]
 mode = "1920x1200@60"
@@ -28,7 +30,6 @@ form = "desktop"
 cpu = "amd"
 compositor = "niri"
 shell = "dms"
-roles = ["remote-server"]
 
 # Living room: the TV that is currently connected.
 [hosts.knut.outputs."Samsung Electric Company SAMSUNG 0x00000001"]

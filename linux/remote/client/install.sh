@@ -6,6 +6,31 @@ here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 bindir=${BINDIR:-$HOME/.local/bin}
 appdir=${APPDIR:-$HOME/.local/share/applications}
 
+. "$here/../lib.sh"
+
+INSTALL_PACKAGES=1
+
+usage() {
+    cat <<'EOF'
+usage: install.sh [--no-packages]
+
+  --no-packages   install the helper scripts but skip packages.txt
+EOF
+}
+
+while (( $# )); do
+    case "$1" in
+        --no-packages) INSTALL_PACKAGES=0 ;;
+        -h|--help) usage; exit 0 ;;
+        *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
+    esac
+    shift
+done
+
+if (( INSTALL_PACKAGES )); then
+    install_packages "$here/packages.txt"
+fi
+
 install -d "$bindir" "$appdir"
 
 install -m755 "$here/bin/remote-desktop" "$bindir/remote-desktop"
@@ -39,8 +64,6 @@ Next steps:
   2. Add the SSH alias from client/ssh/config.snippet to ~/.ssh/config.
   3. Pair Moonlight once: run 'moonlight', add the server, enter its PIN
      in the Sunshine web UI at https://<server>:47990.
-  4. Track the launchers with chezmoi:
-       chezmoi add "$bindir/remote-desktop" "$bindir/clipboard-sync"
 EOF
 
 if [ "$missing" -ne 0 ]; then
