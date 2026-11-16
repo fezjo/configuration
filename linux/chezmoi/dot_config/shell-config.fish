@@ -11,7 +11,7 @@ end
 if type -q zoxide
     zoxide init fish | source
 end
-if set -q XDG_RUNTIME_DIR
+if not set -q SSH_AUTH_SOCK; and set -q XDG_RUNTIME_DIR
     set -gx SSH_AUTH_SOCK $XDG_RUNTIME_DIR/ssh-agent.socket
 end
 if isatty

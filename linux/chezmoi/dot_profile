@@ -4,11 +4,6 @@
 
 . "$HOME/.config/shell/env.sh"
 
-if [ -t 0 ]; then
-    GPG_TTY=$(tty)
-    export GPG_TTY
-fi
-
 # Bash login shells read .profile, not .bashrc.
 if [ -n "${BASH_VERSION:-}" ] && [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"

@@ -37,8 +37,3 @@ if command -v fzf >/dev/null 2>&1; then
         . /usr/share/fzf/key-bindings.bash
     fi
 fi
-
-if [ -t 0 ]; then
-    GPG_TTY=$(tty)
-    export GPG_TTY
-fi

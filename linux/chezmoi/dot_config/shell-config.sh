@@ -13,12 +13,10 @@ fi
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init "$__shell")"
 fi
-if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+# environment.d normally provides this; keep a fallback for sessions that
+# start without it.
+if [ -z "${SSH_AUTH_SOCK:-}" ] && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
     SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
     export SSH_AUTH_SOCK
-fi
-if [ -t 0 ]; then
-    GPG_TTY=$(tty)
-    export GPG_TTY
 fi
 unset __shell
