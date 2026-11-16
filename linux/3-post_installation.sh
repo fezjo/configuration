@@ -252,14 +252,22 @@ run sudo usermod -aG video "$USER_NAME" || warn "video group setup failed"
 
 # Python
 run pipx ensurepath || warn "pipx ensurepath failed"
-run pypy3 -m ensurepip || warn "pypy ensurepip failed"
-# PyPy has no matplotlib wheel; keep the source build best-effort and out of
-# the main log.
-if (( DRY_RUN )); then
-    printf '    [dry-run] pypy3 -m pip install matplotlib\n'
-elif ! pypy3 -m pip install matplotlib >/tmp/pypy-matplotlib.log 2>&1; then
-    warn "pypy matplotlib install failed; see /tmp/pypy-matplotlib.log"
+
+pypy_module_installed() {
+    pypy3 -c 'import importlib.util, sys
+raise SystemExit(0 if importlib.util.find_spec(sys.argv[1]) else 1)' "$1" \
+        >/dev/null 2>&1
+}
+
+# ensurepip runs its bundled pip bootstrap on every call and takes ~13s under
+# PyPy even when pip is already installed.
+if ! pypy_module_installed pip; then
+    run pypy3 -m ensurepip || warn "pypy ensurepip failed"
 fi
+
+# PyPy has no matplotlib wheel, and the source build compiles NumPy for many
+# minutes. Use CPython for matplotlib instead.
+
 for tool in input-tool shell-gpt xxh-xxh; do
     run uv tool install "$tool" || warn "uv tool install $tool failed"
 done
